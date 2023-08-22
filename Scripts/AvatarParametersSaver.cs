@@ -203,6 +203,16 @@ public class AvatarParametersSaver : EditorWindow
         GUI.backgroundColor = Color.yellow;
         if (GUILayout.Button("保存"))
         {
+            if (string.IsNullOrEmpty(MenuName))
+            {
+                EditorUtility.DisplayDialog("Error", "プリセットメニュー名を指定して下さい", "OK");
+                return;
+            }
+            if (string.IsNullOrEmpty(DriveParameter.name))
+            {
+                EditorUtility.DisplayDialog("Error", "プリセットパラメーター名を指定して下さい", "OK");
+                return;
+            }
             Save(runtime, avatar);
         }
         GUI.backgroundColor = defaultColor;
