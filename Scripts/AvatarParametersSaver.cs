@@ -205,7 +205,9 @@ public class AvatarParametersSaver : EditorWindow
         }
         else
         {
+            EditorGUI.BeginDisabledGroup(true);
             EditorGUILayout.ObjectField("設定", Presets, typeof(AvatarParametersSaverPresets), false);
+            EditorGUI.EndDisabledGroup();
         }
 
         if (GUILayout.Button("リセット"))
@@ -433,7 +435,8 @@ public class AvatarParametersSaver : EditorWindow
 
     void Save(LyumaAv3Runtime runtime, VRCAvatarDescriptor avatar)
     {
-        var path = EditorUtility.SaveFilePanelInProject("save prefab", Presets.parameterName, "prefab", "save prefab");
+        Debug.Log(Presets.prefab == null ? "Assets" : AssetDatabase.GetAssetPath(Presets.prefab));
+        var path = EditorUtility.SaveFilePanelInProject("save prefab", Presets.parameterName, "prefab", "save prefab", Presets.prefab == null ? "Assets" : Path.GetDirectoryName(AssetDatabase.GetAssetPath(Presets.prefab)));
         if (string.IsNullOrEmpty(path))
         {
             return;
@@ -502,7 +505,7 @@ public class AvatarParametersSaver : EditorWindow
         var filename = Path.GetFileNameWithoutExtension(path);
         var assetPath = Path.Combine(Path.GetDirectoryName(path), $"{filename}.asset");
         var previousAssetPath = AssetDatabase.GetAssetPath(Presets);
-        if (Path.GetFullPath(previousAssetPath) == Path.GetFullPath(assetPath))
+        if (!string.IsNullOrEmpty(previousAssetPath) && Path.GetFullPath(previousAssetPath) == Path.GetFullPath(assetPath))
         {
             EditorUtility.SetDirty(Presets);
             AssetDatabase.SaveAssets();
