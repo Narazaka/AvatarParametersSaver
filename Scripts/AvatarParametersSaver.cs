@@ -110,29 +110,9 @@ public class AvatarParametersSaver : EditorWindow
 
     // Settings
 
-    string MenuName;
-    VRCExpressionParameters.Parameter DriveParameter = new VRCExpressionParameters.Parameter();
+    AvatarParametersSaverPreset DriveParameter = new AvatarParametersSaverPreset();
     static string[] ParameterTypes = new string[] { "Int", "Bool" };
     static string[] SyncModes = new string[] { "プリセットパラメータを同期", "結果パラメータを同期" };
-
-    HashSet<string> TargetParameterNames = new HashSet<string>();
-
-    bool IsTarget(string parameter)
-    {
-        return TargetParameterNames.Contains(parameter);
-    }
-
-    void AdjustTargetParameter(string parameter, bool isTarget)
-    {
-        if (isTarget)
-        {
-            TargetParameterNames.Add(parameter);
-        }
-        else
-        {
-            TargetParameterNames.Remove(parameter);
-        }
-    }
 
     // UI
 
@@ -176,7 +156,7 @@ public class AvatarParametersSaver : EditorWindow
 
         EditorGUILayout.LabelField("プリセットメニュー設定", EditorStyles.boldLabel);
 
-        MenuName = EditorGUILayout.TextField("プリセットメニュー名", MenuName);
+        DriveParameter.menuName = EditorGUILayout.TextField("プリセットメニュー名", DriveParameter.menuName);
         DriveParameter.name = EditorGUILayout.TextField("プリセットパラメーター名", DriveParameter.name);
         DriveParameter.valueType = (VRCExpressionParameters.ValueType)(EditorGUILayout.Popup("プリセットパラメーター型", (int)DriveParameter.valueType / 2, ParameterTypes) * 2);
         if (DriveParameter.valueType == VRCExpressionParameters.ValueType.Float)
@@ -203,7 +183,7 @@ public class AvatarParametersSaver : EditorWindow
         GUI.backgroundColor = Color.yellow;
         if (GUILayout.Button("保存"))
         {
-            if (string.IsNullOrEmpty(MenuName))
+            if (string.IsNullOrEmpty(DriveParameter.menuName))
             {
                 EditorUtility.DisplayDialog("Error", "プリセットメニュー名を指定して下さい", "OK");
                 return;
@@ -222,7 +202,7 @@ public class AvatarParametersSaver : EditorWindow
         AutoCheckChangedParameters = EditorGUILayout.ToggleLeft("変化したパラメーターを自動でチェック", AutoCheckChangedParameters);
         if (GUILayout.Button("選択をクリア"))
         {
-            TargetParameterNames.Clear();
+            DriveParameter.parameters.Clear();
         }
 
         scrollPos = EditorGUILayout.BeginScrollView(scrollPos);
@@ -251,7 +231,7 @@ public class AvatarParametersSaver : EditorWindow
         var sorted = SortMode == 0 ? parameters.AsEnumerable() : parameters.OrderBy(p => p.name);
         if (PreferEnabledParameters)
         {
-            sorted = sorted.OrderBy(p => !IsTarget(p.name));
+            sorted = sorted.OrderBy(p => !DriveParameter.IsTarget(p.name));
         }
         return sorted;
     }
@@ -296,52 +276,16 @@ public class AvatarParametersSaver : EditorWindow
         }
     }
 
-    float GetParameterValue(LyumaAv3Runtime runtime, VRCExpressionParameters.Parameter parameter)
-    {
-        switch (parameter.valueType)
-        {
-            case VRCExpressionParameters.ValueType.Bool:
-                {
-                    var param = runtime.Bools.Find(v => v.name == parameter.name);
-                    if (param == null)
-                    {
-                        return float.NaN;
-                    }
-                    return param.value ? 1 : 0;
-                }
-            case VRCExpressionParameters.ValueType.Float:
-                {
-                    var param = runtime.Floats.Find(v => v.name == parameter.name);
-                    if (param == null)
-                    {
-                        return float.NaN;
-                    }
-                    return param.value;
-                }
-            case VRCExpressionParameters.ValueType.Int:
-                {
-                    var param = runtime.Ints.Find(v => v.name == parameter.name);
-                    if (param == null)
-                    {
-                        return float.NaN;
-                    }
-                    return param.value;
-                }
-            default:
-                return float.NaN;
-        }
-    }
-
     void DisplayIsTargetToggle(string parameter, object value, VRCExpressionParameters.ValueType type)
     {
         if (AutoCheckChangedParameters && CheckChanged(parameter, value))
         {
-            AdjustTargetParameter(parameter, true);
+            DriveParameter.AdjustTargetParameter(parameter, true);
         }
         if (IsShow(type))
         {
             EditorGUILayout.BeginHorizontal();
-            var result = EditorGUILayout.ToggleLeft(parameter, IsTarget(parameter));
+            var result = EditorGUILayout.ToggleLeft(parameter, DriveParameter.IsTarget(parameter));
             EditorGUI.BeginDisabledGroup(true);
             switch (type)
             {
@@ -357,7 +301,7 @@ public class AvatarParametersSaver : EditorWindow
             }
             EditorGUI.EndDisabledGroup();
             EditorGUILayout.EndHorizontal();
-            AdjustTargetParameter(parameter, result);
+            DriveParameter.AdjustTargetParameter(parameter, result);
         }
     }
 
@@ -393,19 +337,21 @@ public class AvatarParametersSaver : EditorWindow
 
     void Save(LyumaAv3Runtime runtime, VRCAvatarDescriptor avatar)
     {
-        var path = EditorUtility.SaveFilePanelInProject("save prefab", MenuName, "prefab", "save prefab");
+        var path = EditorUtility.SaveFilePanelInProject("save prefab", DriveParameter.menuName, "prefab", "save prefab");
         if (string.IsNullOrEmpty(path))
         {
             return;
         }
 
-        SavePrefab(path, MakeAnimator(runtime, avatar, path));
+        DriveParameter.ApplyValues(runtime, avatar.expressionParameters.parameters);
+
+        SavePrefab(path, MakeAnimator(path));
     }
 
     void SavePrefab(string path, AnimatorController animator)
     {
         var prefabExists = File.Exists(path);
-        var go = prefabExists ? PrefabUtility.LoadPrefabContents(path) : new GameObject(MenuName);
+        var go = prefabExists ? PrefabUtility.LoadPrefabContents(path) : new GameObject(DriveParameter.menuName);
         var mergeAnimator = go.GetOrAddComponent<ModularAvatarMergeAnimator>();
         mergeAnimator.animator = animator;
         mergeAnimator.matchAvatarWriteDefaults = true;
@@ -424,9 +370,9 @@ public class AvatarParametersSaver : EditorWindow
         var menuItem = go.GetOrAddComponent<ModularAvatarMenuItem>();
         menuItem.Control = new VRCExpressionsMenu.Control
         {
-            name = MenuName,
+            name = DriveParameter.menuName,
             parameter = new VRCExpressionsMenu.Control.Parameter { name = DriveParameter.name },
-            value = DriveParameter.defaultValue,
+            value = DriveParameter.valueType == VRCExpressionParameters.ValueType.Int ? DriveParameter.defaultValue : 1,
             type = VRCExpressionsMenu.Control.ControlType.Button,
         };
         go.GetOrAddComponent<ModularAvatarMenuInstaller>();
@@ -441,11 +387,9 @@ public class AvatarParametersSaver : EditorWindow
         }
     }
 
-    AnimatorController MakeAnimator(LyumaAv3Runtime runtime, VRCAvatarDescriptor avatar, string path)
+    AnimatorController MakeAnimator(string path)
     {
         var filename = Path.GetFileNameWithoutExtension(path);
-
-        var targetParameters = avatar.expressionParameters.parameters.Where(p => TargetParameterNames.Contains(p.name));
 
         var controllerPath = Path.Combine(Path.GetDirectoryName(path), $"{filename}.controller");
         var animator = AnimatorController.CreateAnimatorControllerAtPath(controllerPath);
@@ -481,11 +425,11 @@ public class AvatarParametersSaver : EditorWindow
         actionState.writeDefaultValues = false;
         var driver = actionState.AddStateMachineBehaviour<VRCAvatarParameterDriver>();
         driver.localOnly = DriveParameter.networkSynced;
-        driver.parameters = targetParameters.Select(p => new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter
+        driver.parameters = DriveParameter.parameters.Select(p => new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter
         {
             type = VRC.SDKBase.VRC_AvatarParameterDriver.ChangeType.Set,
             name = p.name,
-            value = GetParameterValue(runtime, p),
+            value = p.value,
         }).ToList();
 
         layer.stateMachine.defaultState = idleState;
