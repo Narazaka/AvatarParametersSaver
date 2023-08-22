@@ -110,8 +110,21 @@ public class AvatarParametersSaver : EditorWindow
 
     // Settings
 
-    AvatarParametersSaverPreset DriveParameter = new AvatarParametersSaverPreset();
-    static string[] ParameterTypes = new string[] { "Int", "Bool" };
+    bool AllowLoadPresets;
+
+    AvatarParametersSaverPresets Presets;
+    int CurrentPresetIndex { get => PresetsList == null || PresetsList.index == -1 ? 0 : PresetsList.index; }
+    AvatarParametersSaverPreset DriveParameter
+    {
+        get
+        {
+            if (Presets.presets.Count < CurrentPresetIndex + 1)
+            {
+                Presets.presets.AddRange(Enumerable.Range(0, CurrentPresetIndex + 1 - Presets.presets.Count).Select((_) => new AvatarParametersSaverPreset()));
+            }
+            return Presets.presets[CurrentPresetIndex];
+        }
+    }
     static string[] SyncModes = new string[] { "プリセットパラメータを同期", "結果パラメータを同期" };
 
     // UI
@@ -120,6 +133,9 @@ public class AvatarParametersSaver : EditorWindow
     Dictionary<string, object> PreviousValues = new Dictionary<string, object>();
 
     Vector2 scrollPos;
+
+    SerializedObject so;
+    UnityEditorInternal.ReorderableList PresetsList;
 
     void OnGUI()
     {
@@ -154,23 +170,53 @@ public class AvatarParametersSaver : EditorWindow
             PreviousValues.Clear();
         }
 
-        EditorGUILayout.LabelField("プリセットメニュー設定", EditorStyles.boldLabel);
-
-        DriveParameter.menuName = EditorGUILayout.TextField("プリセットメニュー名", DriveParameter.menuName);
-        DriveParameter.name = EditorGUILayout.TextField("プリセットパラメーター名", DriveParameter.name);
-        DriveParameter.valueType = (VRCExpressionParameters.ValueType)(EditorGUILayout.Popup("プリセットパラメーター型", (int)DriveParameter.valueType / 2, ParameterTypes) * 2);
-        if (DriveParameter.valueType == VRCExpressionParameters.ValueType.Float)
+        if (Presets == null)
         {
-            EditorGUILayout.LabelField("Floatには未対応です");
-            return;
+            CreatePresets();
         }
-        if (DriveParameter.valueType == VRCExpressionParameters.ValueType.Int)
-        {
-            DriveParameter.defaultValue = EditorGUILayout.FloatField("プリセットパラメーター値", DriveParameter.defaultValue);
-        }
-        DriveParameter.networkSynced = GUILayout.Toolbar(DriveParameter.networkSynced ? 0 : 1, SyncModes) == 0;
 
-        if (DriveParameter.networkSynced)
+        if (string.IsNullOrEmpty(AssetDatabase.GetAssetPath(Presets)))
+        {
+            if (AllowLoadPresets)
+            {
+                var newPresets = EditorGUILayout.ObjectField("設定をロード", null, typeof(AvatarParametersSaverPresets), false);
+                if (newPresets != null)
+                {
+                    Presets = newPresets as AvatarParametersSaverPresets;
+                    so = null;
+                    AllowLoadPresets = false;
+                }
+                if (GUILayout.Button("Cancel"))
+                {
+                    AllowLoadPresets = false;
+                }
+            }
+            else
+            {
+                if (GUILayout.Button("設定をロード"))
+                {
+                    AllowLoadPresets = true;
+                }
+            }
+        }
+        else
+        {
+            EditorGUILayout.ObjectField("設定", Presets, typeof(AvatarParametersSaverPresets), false);
+        }
+
+        if (GUILayout.Button("リセット"))
+        {
+            if (EditorUtility.DisplayDialog("警告", "現在の設定が全てクリアされますがよろしいですか？", "OK", "Cancel"))
+            {
+                CreatePresets();
+            }
+        }
+
+        EditorGUILayout.LabelField("全般設定", EditorStyles.boldLabel);
+
+        Presets.networkSynced = GUILayout.Toolbar(Presets.networkSynced ? 0 : 1, SyncModes) == 0;
+
+        if (Presets.networkSynced)
         {
             EditorGUILayout.HelpBox("プリセットパラメーターをSyncし、VRC_AvatarParameterDriver側で値を同期せずにlocalOnlyで値を変更するモードです。", MessageType.Info);
         }
@@ -178,19 +224,65 @@ public class AvatarParametersSaver : EditorWindow
         {
             EditorGUILayout.HelpBox("プリセットパラメーターをSyncせず、VRC_AvatarParameterDriver側で値を同期して変更するモードです。", MessageType.Info);
         }
+        Presets.parameterName = EditorGUILayout.TextField("プリセットパラメーター名", Presets.parameterName);
+
+        EditorGUILayout.LabelField("プリセット", EditorStyles.boldLabel);
+        if (so == null)
+        {
+            so = new SerializedObject(Presets);
+            var presets = so.FindProperty("presets");
+            Debug.Log(Presets);
+            Debug.Log(Presets.presets);
+            Debug.Log(presets);
+            PresetsList = new UnityEditorInternal.ReorderableList(so, presets);
+            PresetsList.drawHeaderCallback = rect => EditorGUI.LabelField(rect, "プリセット");
+            var height = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
+            PresetsList.elementHeightCallback = index => height;
+            PresetsList.drawElementCallback = (rect, index, _isActive, isFocused) =>
+            {
+                var p = Presets.presets[index];
+                var menuName = p.menuName;
+                var paramCount = p.parameters.Count;
+                rect.width -= 70;
+                EditorGUIUtility.labelWidth = 100;
+                p.menuName = EditorGUI.TextField(rect, "プリセットメニュー名", menuName);
+                EditorGUIUtility.labelWidth = 0;
+                rect.x += rect.width;
+                rect.width = 70;
+                EditorGUI.LabelField(rect, $"({paramCount} パラメータ)");
+            };
+        }
+        so.Update();
+        PresetsList.DoLayoutList();
+        so.ApplyModifiedProperties();
+
+        DriveParameter.menuName = EditorGUILayout.TextField("プリセットメニュー名", DriveParameter.menuName);
+
 
         var defaultColor = GUI.backgroundColor;
-        GUI.backgroundColor = Color.yellow;
-        if (GUILayout.Button("保存"))
+
+        GUI.backgroundColor = Color.cyan;
+        if (GUILayout.Button("↑現在のパラメーターをプリセットに保存"))
         {
-            if (string.IsNullOrEmpty(DriveParameter.menuName))
-            {
-                EditorUtility.DisplayDialog("Error", "プリセットメニュー名を指定して下さい", "OK");
-                return;
-            }
-            if (string.IsNullOrEmpty(DriveParameter.name))
+            DriveParameter.ApplyValues(runtime, avatar.expressionParameters.parameters);
+        }
+        GUI.backgroundColor = Color.green;
+        if (GUILayout.Button("↓プリセットのパラメーターを反映"))
+        {
+            DriveParameter.ValuesToRuntime(runtime, avatar.expressionParameters.parameters);
+        }
+
+        GUI.backgroundColor = Color.red;
+        if (GUILayout.Button("メニューを保存"))
+        {
+            if (string.IsNullOrEmpty(Presets.parameterName))
             {
                 EditorUtility.DisplayDialog("Error", "プリセットパラメーター名を指定して下さい", "OK");
+                return;
+            }
+            if (Presets.presets.Any(p => string.IsNullOrEmpty(p.menuName)))
+            {
+                EditorUtility.DisplayDialog("Error", $"空になっているプリセットメニュー名を指定して下さい", "OK");
                 return;
             }
             Save(runtime, avatar);
@@ -234,6 +326,13 @@ public class AvatarParametersSaver : EditorWindow
             sorted = sorted.OrderBy(p => !DriveParameter.IsTarget(p.name));
         }
         return sorted;
+    }
+
+    void CreatePresets()
+    {
+        so = null;
+        // CurrentPresetIndex = 0;
+        Presets = ScriptableObject.CreateInstance<AvatarParametersSaverPresets>();
     }
 
     void DipslayParameter(LyumaAv3Runtime runtime, VRCExpressionParameters.Parameter parameter)
@@ -337,21 +436,33 @@ public class AvatarParametersSaver : EditorWindow
 
     void Save(LyumaAv3Runtime runtime, VRCAvatarDescriptor avatar)
     {
-        var path = EditorUtility.SaveFilePanelInProject("save prefab", DriveParameter.menuName, "prefab", "save prefab");
+        var path = EditorUtility.SaveFilePanelInProject("save prefab", Presets.parameterName, "prefab", "save prefab");
         if (string.IsNullOrEmpty(path))
         {
             return;
         }
 
-        DriveParameter.ApplyValues(runtime, avatar.expressionParameters.parameters);
+        var animator = MakeAnimator(path);
 
-        SavePrefab(path, MakeAnimator(path));
+        var prefabExists = File.Exists(path);
+        var go = prefabExists ? PrefabUtility.LoadPrefabContents(path) : new GameObject(Presets.parameterName);
+
+        var prefab = SavePrefab(path, go, animator);
+        SaveAsset(path, prefab);
+
+        if (prefabExists)
+        {
+            PrefabUtility.UnloadPrefabContents(go);
+        }
+        else
+        {
+            DestroyImmediate(go);
+        }
     }
 
-    void SavePrefab(string path, AnimatorController animator)
+    GameObject SavePrefab(string path, GameObject go, AnimatorController animator)
     {
         var prefabExists = File.Exists(path);
-        var go = prefabExists ? PrefabUtility.LoadPrefabContents(path) : new GameObject(DriveParameter.menuName);
         var mergeAnimator = go.GetOrAddComponent<ModularAvatarMergeAnimator>();
         mergeAnimator.animator = animator;
         mergeAnimator.matchAvatarWriteDefaults = true;
@@ -361,29 +472,44 @@ public class AvatarParametersSaver : EditorWindow
         {
             new ParameterConfig
             {
-                nameOrPrefix = DriveParameter.name,
-                syncType = DriveParameter.valueType == VRCExpressionParameters.ValueType.Int ? ParameterSyncType.Int : ParameterSyncType.Bool,
-                localOnly = !DriveParameter.networkSynced,
+                nameOrPrefix = Presets.parameterName,
+                syncType = ParameterSyncType.Int,
+                localOnly = !Presets.networkSynced,
                 saved = false,
             },
         };
-        var menuItem = go.GetOrAddComponent<ModularAvatarMenuItem>();
-        menuItem.Control = new VRCExpressionsMenu.Control
+        for (var i = 0; i < Presets.presets.Count; i++)
         {
-            name = DriveParameter.menuName,
-            parameter = new VRCExpressionsMenu.Control.Parameter { name = DriveParameter.name },
-            value = DriveParameter.valueType == VRCExpressionParameters.ValueType.Int ? DriveParameter.defaultValue : 1,
-            type = VRCExpressionsMenu.Control.ControlType.Button,
-        };
-        go.GetOrAddComponent<ModularAvatarMenuInstaller>();
-        PrefabUtility.SaveAsPrefabAsset(go, path);
-        if (prefabExists)
+            var preset = Presets.presets[i];
+            var menu = new GameObject(preset.menuName);
+            menu.transform.parent = go.transform;
+            var menuItem = menu.GetOrAddComponent<ModularAvatarMenuItem>();
+            menuItem.Control = new VRCExpressionsMenu.Control
+            {
+                name = preset.menuName,
+                parameter = new VRCExpressionsMenu.Control.Parameter { name = Presets.parameterName },
+                value = i + 1,
+                type = VRCExpressionsMenu.Control.ControlType.Button,
+            };
+            menu.GetOrAddComponent<ModularAvatarMenuInstaller>();
+        }
+        return PrefabUtility.SaveAsPrefabAsset(go, path);
+    }
+
+    void SaveAsset(string path, GameObject go)
+    {
+        Presets.prefab = go;
+        var filename = Path.GetFileNameWithoutExtension(path);
+        var assetPath = Path.Combine(Path.GetDirectoryName(path), $"{filename}.asset");
+        var previousAssetPath = AssetDatabase.GetAssetPath(Presets);
+        if (Path.GetFullPath(previousAssetPath) == Path.GetFullPath(assetPath))
         {
-            PrefabUtility.UnloadPrefabContents(go);
+            EditorUtility.SetDirty(Presets);
+            AssetDatabase.SaveAssets();
         }
         else
         {
-            DestroyImmediate(go);
+            AssetDatabase.CreateAsset(Presets, assetPath);
         }
     }
 
@@ -397,7 +523,7 @@ public class AvatarParametersSaver : EditorWindow
         layer.stateMachine.anyStatePosition = new Vector3(-250, 250, 0);
         layer.stateMachine.entryPosition = new Vector3(-250, 0, 0);
         layer.stateMachine.exitPosition = new Vector3(-250, -250, 0);
-        animator.AddParameter(DriveParameter.name, DriveParameter.valueType == VRCExpressionParameters.ValueType.Int ? AnimatorControllerParameterType.Int : AnimatorControllerParameterType.Bool);
+        animator.AddParameter(Presets.parameterName, AnimatorControllerParameterType.Int);
         /*
         foreach (var parameter in targetParameters)
         {
@@ -420,43 +546,36 @@ public class AvatarParametersSaver : EditorWindow
         var idleState = layer.stateMachine.AddState("Idle", new Vector3(0, 0, 0));
         idleState.motion = EmptyClip();
         idleState.writeDefaultValues = false;
-        var actionState = layer.stateMachine.AddState("Action", new Vector3(0, 250, 0));
-        actionState.motion = EmptyClip();
-        actionState.writeDefaultValues = false;
-        var driver = actionState.AddStateMachineBehaviour<VRCAvatarParameterDriver>();
-        driver.localOnly = DriveParameter.networkSynced;
-        driver.parameters = DriveParameter.parameters.Select(p => new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter
-        {
-            type = VRC.SDKBase.VRC_AvatarParameterDriver.ChangeType.Set,
-            name = p.name,
-            value = p.value,
-        }).ToList();
-
         layer.stateMachine.defaultState = idleState;
-        var activeTransition = idleState.AddTransition(actionState);
-        activeTransition.hasExitTime = false;
-        activeTransition.exitTime = 0;
-        activeTransition.duration = 0;
-        if (DriveParameter.valueType == VRCExpressionParameters.ValueType.Int)
+
+        for (var i = 0; i < Presets.presets.Count; i++)
         {
-            activeTransition.AddCondition(AnimatorConditionMode.Equals, DriveParameter.defaultValue, DriveParameter.name);
+            var cnt = i + 1;
+            var preset = Presets.presets[i];
+            var actionState = layer.stateMachine.AddState($"Action{cnt}", new Vector3(0, 125 * cnt, 0));
+            actionState.motion = EmptyClip();
+            actionState.writeDefaultValues = false;
+            var driver = actionState.AddStateMachineBehaviour<VRCAvatarParameterDriver>();
+            driver.localOnly = Presets.networkSynced;
+            driver.parameters = preset.parameters.Select(p => new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter
+            {
+                type = VRC.SDKBase.VRC_AvatarParameterDriver.ChangeType.Set,
+                name = p.name,
+                value = p.value,
+            }).ToList();
+
+            var activeTransition = idleState.AddTransition(actionState);
+            activeTransition.hasExitTime = false;
+            activeTransition.exitTime = 0;
+            activeTransition.duration = 0;
+            activeTransition.AddCondition(AnimatorConditionMode.Equals, cnt, Presets.parameterName);
+            var idleTransition = actionState.AddTransition(idleState);
+            idleTransition.hasExitTime = false;
+            idleTransition.exitTime = 0;
+            idleTransition.duration = 0;
+            idleTransition.AddCondition(AnimatorConditionMode.NotEqual, cnt, Presets.parameterName);
         }
-        else
-        {
-            activeTransition.AddCondition(AnimatorConditionMode.If, 1, DriveParameter.name);
-        }
-        var idleTransition = actionState.AddTransition(idleState);
-        idleTransition.hasExitTime = false;
-        idleTransition.exitTime = 0;
-        idleTransition.duration = 0;
-        if (DriveParameter.valueType == VRCExpressionParameters.ValueType.Int)
-        {
-            idleTransition.AddCondition(AnimatorConditionMode.NotEqual, DriveParameter.defaultValue, DriveParameter.name);
-        }
-        else
-        {
-            idleTransition.AddCondition(AnimatorConditionMode.IfNot, 1, DriveParameter.name);
-        }
+        
         return animator;
     }
 

@@ -1,20 +1,16 @@
 ﻿using Lyuma.Av3Emulator.Runtime;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using VRC.SDK3.Avatars.ScriptableObjects;
 
+[Serializable]
 public class AvatarParametersSaverPreset
 {
     public string menuName;
-    public string name;
-    public VRCExpressionParameters.ValueType valueType;
-    public bool networkSynced;
-    public float value = 1;
     public List<AvatarParametersSaverParameter> parameters = new List<AvatarParametersSaverParameter>();
-
-    public float defaultValue { get => value; set => this.value = value; }
 
     public bool IsTarget(string parameter)
     {
@@ -54,6 +50,38 @@ public class AvatarParametersSaverPreset
         }
         // 順序をあわせる
         parameters = newParameters;
+    }
+
+    public void ValuesToRuntime(LyumaAv3Runtime runtime, IEnumerable<VRCExpressionParameters.Parameter> exParameters)
+    {
+        var parametersMap = parameters.ToDictionary(p => p.name, p => p);
+        foreach (var exParameter in exParameters)
+        {
+            if (parametersMap.TryGetValue(exParameter.name, out var parameter))
+            {
+                switch (exParameter.valueType)
+                {
+                    case VRCExpressionParameters.ValueType.Bool:
+                        {
+                            var runtimeParameter = runtime.Bools.Find(p => p.name == parameter.name);
+                            runtimeParameter.value = parameter.value != 0;
+                            break;
+                        }
+                    case VRCExpressionParameters.ValueType.Int:
+                        {
+                            var runtimeParameter = runtime.Ints.Find(p => p.name == parameter.name);
+                            runtimeParameter.value = (int)parameter.value;
+                            break;
+                        }
+                    case VRCExpressionParameters.ValueType.Float:
+                        {
+                            var runtimeParameter = runtime.Floats.Find(p => p.name == parameter.name);
+                            runtimeParameter.value = parameter.value;
+                            break;
+                        }
+                }
+            }
+        }
     }
 
     float GetParameterValue(LyumaAv3Runtime runtime, VRCExpressionParameters.Parameter parameter)
