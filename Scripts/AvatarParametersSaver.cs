@@ -459,7 +459,6 @@ public class AvatarParametersSaver : EditorWindow
 
     GameObject SavePrefab(string path, GameObject go, AnimatorController animator)
     {
-        var prefabExists = File.Exists(path);
         var mergeAnimator = go.GetOrAddComponent<ModularAvatarMergeAnimator>();
         mergeAnimator.animator = animator;
         mergeAnimator.matchAvatarWriteDefaults = true;
@@ -475,6 +474,10 @@ public class AvatarParametersSaver : EditorWindow
                 saved = false,
             },
         };
+        for (var i = go.transform.childCount - 1; i >= 0; i--)
+        {
+            Object.DestroyImmediate(go.transform.GetChild(i).gameObject);
+        }
         for (var i = 0; i < Presets.presets.Count; i++)
         {
             var preset = Presets.presets[i];
