@@ -113,7 +113,11 @@ public class AvatarParametersSaver : EditorWindow
     bool AllowLoadPresets;
 
     AvatarParametersSaverPresets Presets;
-    int CurrentPresetIndex { get => PresetsList == null || PresetsList.index == -1 ? 0 : PresetsList.index; }
+    int CurrentPresetIndex
+    {
+        get => PresetsList == null || PresetsList.index == -1 ? 0 : PresetsList.index;
+    }
+    int PreviousPresetIndex;
     AvatarParametersSaverPreset DriveParameter
     {
         get
@@ -256,21 +260,14 @@ public class AvatarParametersSaver : EditorWindow
         PresetsList.DoLayoutList();
         so.ApplyModifiedProperties();
 
-        DriveParameter.menuName = EditorGUILayout.TextField("プリセットメニュー名", DriveParameter.menuName);
-
-
         var defaultColor = GUI.backgroundColor;
 
-        GUI.backgroundColor = Color.cyan;
-        if (GUILayout.Button("↑現在のパラメーターをプリセットに保存"))
-        {
-            DriveParameter.ApplyValues(runtime, avatar.expressionParameters.parameters);
-        }
-        GUI.backgroundColor = Color.green;
-        if (GUILayout.Button("↓プリセットのパラメーターを反映"))
+        if (PreviousPresetIndex != CurrentPresetIndex)
         {
             DriveParameter.ValuesToRuntime(runtime, avatar.expressionParameters.parameters);
+            PreviousPresetIndex = CurrentPresetIndex;
         }
+        DriveParameter.ApplyValues(runtime, avatar.expressionParameters.parameters);
 
         GUI.backgroundColor = Color.red;
         if (GUILayout.Button("メニューを保存"))
