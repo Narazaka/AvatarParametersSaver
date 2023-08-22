@@ -398,6 +398,51 @@ public class AvatarParametersSaver : EditorWindow
         {
             return;
         }
+
+        SavePrefab(path, MakeAnimator(runtime, avatar, path));
+    }
+
+    void SavePrefab(string path, AnimatorController animator)
+    {
+        var prefabExists = File.Exists(path);
+        var go = prefabExists ? PrefabUtility.LoadPrefabContents(path) : new GameObject(MenuName);
+        var mergeAnimator = go.GetOrAddComponent<ModularAvatarMergeAnimator>();
+        mergeAnimator.animator = animator;
+        mergeAnimator.matchAvatarWriteDefaults = true;
+        mergeAnimator.layerType = VRCAvatarDescriptor.AnimLayerType.FX;
+        var parameters = go.GetOrAddComponent<ModularAvatarParameters>();
+        parameters.parameters = new List<ParameterConfig>
+        {
+            new ParameterConfig
+            {
+                nameOrPrefix = DriveParameter.name,
+                syncType = DriveParameter.valueType == VRCExpressionParameters.ValueType.Int ? ParameterSyncType.Int : ParameterSyncType.Bool,
+                localOnly = !DriveParameter.networkSynced,
+                saved = false,
+            },
+        };
+        var menuItem = go.GetOrAddComponent<ModularAvatarMenuItem>();
+        menuItem.Control = new VRCExpressionsMenu.Control
+        {
+            name = MenuName,
+            parameter = new VRCExpressionsMenu.Control.Parameter { name = DriveParameter.name },
+            value = DriveParameter.defaultValue,
+            type = VRCExpressionsMenu.Control.ControlType.Button,
+        };
+        go.GetOrAddComponent<ModularAvatarMenuInstaller>();
+        PrefabUtility.SaveAsPrefabAsset(go, path);
+        if (prefabExists)
+        {
+            PrefabUtility.UnloadPrefabContents(go);
+        }
+        else
+        {
+            DestroyImmediate(go);
+        }
+    }
+
+    AnimatorController MakeAnimator(LyumaAv3Runtime runtime, VRCAvatarDescriptor avatar, string path)
+    {
         var filename = Path.GetFileNameWithoutExtension(path);
 
         var targetParameters = avatar.expressionParameters.parameters.Where(p => TargetParameterNames.Contains(p.name));
@@ -468,42 +513,7 @@ public class AvatarParametersSaver : EditorWindow
         {
             idleTransition.AddCondition(AnimatorConditionMode.IfNot, 1, DriveParameter.name);
         }
-
-        var prefabExists = File.Exists(path);
-        var go = prefabExists ? PrefabUtility.LoadPrefabContents(path) : new GameObject(MenuName);
-        var mergeAnimator = go.GetOrAddComponent<ModularAvatarMergeAnimator>();
-        mergeAnimator.animator = animator;
-        mergeAnimator.matchAvatarWriteDefaults = true;
-        mergeAnimator.layerType = VRCAvatarDescriptor.AnimLayerType.FX;
-        var parameters = go.GetOrAddComponent<ModularAvatarParameters>();
-        parameters.parameters = new List<ParameterConfig>
-        {
-            new ParameterConfig
-            {
-                nameOrPrefix = DriveParameter.name,
-                syncType = DriveParameter.valueType == VRCExpressionParameters.ValueType.Int ? ParameterSyncType.Int : ParameterSyncType.Bool,
-                localOnly = !DriveParameter.networkSynced,
-                saved = false,
-            },
-        };
-        var menuItem = go.GetOrAddComponent<ModularAvatarMenuItem>();
-        menuItem.Control = new VRCExpressionsMenu.Control
-        {
-            name = MenuName,
-            parameter = new VRCExpressionsMenu.Control.Parameter { name = DriveParameter.name },
-            value = DriveParameter.defaultValue,
-            type = VRCExpressionsMenu.Control.ControlType.Button,
-        };
-        go.GetOrAddComponent<ModularAvatarMenuInstaller>();
-        PrefabUtility.SaveAsPrefabAsset(go, path);
-        if (prefabExists)
-        {
-            PrefabUtility.UnloadPrefabContents(go);
-        }
-        else
-        {
-            DestroyImmediate(go);
-        }
+        return animator;
     }
 
     AnimatorControllerParameterType ToAnimParamType(VRCExpressionParameters.ValueType valueType)
