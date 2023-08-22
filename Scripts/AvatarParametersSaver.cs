@@ -31,6 +31,29 @@ public class AvatarParametersSaver : EditorWindow
 
     static AnimationClip EmptyClipCache;
 
+    static GUIStyle IntFieldStyle()
+    {
+        if (IntFieldStyleCache == null)
+        {
+            IntFieldStyleCache = new GUIStyle(EditorStyles.textField);
+            IntFieldStyleCache.normal.textColor = Color.red;
+        }
+        return IntFieldStyleCache;
+    }
+    static GUIStyle IntFieldStyleCache;
+
+
+    static GUIStyle FloatFieldStyle()
+    {
+        if (FloatFieldStyleCache == null)
+        {
+            FloatFieldStyleCache = new GUIStyle(EditorStyles.textField);
+            FloatFieldStyleCache.normal.textColor = Color.green;
+        }
+        return FloatFieldStyleCache;
+    }
+    static GUIStyle FloatFieldStyleCache;
+
     bool AutoCheckChangedParameters = true;
     string MenuName;
     VRCExpressionParameters.Parameter DriveParameter = new VRCExpressionParameters.Parameter();
@@ -138,7 +161,7 @@ public class AvatarParametersSaver : EditorWindow
                         EditorGUILayout.LabelField($"{parameter.name}がありません");
                         break;
                     }
-                    DisplayIsTargetToggle(parameter.name, param.value);
+                    DisplayIsTargetToggle(parameter.name, param.value, parameter.valueType);
                     break;
                 }
             case VRCExpressionParameters.ValueType.Float:
@@ -149,7 +172,7 @@ public class AvatarParametersSaver : EditorWindow
                         EditorGUILayout.LabelField($"{parameter.name}がありません");
                         break;
                     }
-                    DisplayIsTargetToggle(parameter.name, param.value);
+                    DisplayIsTargetToggle(parameter.name, param.value, parameter.valueType);
                     break;
                 }
             case VRCExpressionParameters.ValueType.Int:
@@ -160,7 +183,7 @@ public class AvatarParametersSaver : EditorWindow
                         EditorGUILayout.LabelField($"{parameter.name}がありません");
                         break;
                     }
-                    DisplayIsTargetToggle(parameter.name, param.value);
+                    DisplayIsTargetToggle(parameter.name, param.value, parameter.valueType);
                     break;
                 }
         }
@@ -202,10 +225,27 @@ public class AvatarParametersSaver : EditorWindow
         }
     }
 
-    void DisplayIsTargetToggle(string parameter, object value)
+    void DisplayIsTargetToggle(string parameter, object value, VRCExpressionParameters.ValueType type)
     {
         var forceCheck = AutoCheckChangedParameters && CheckChanged(parameter, value);
-        AdjustTargetParameter(parameter, EditorGUILayout.ToggleLeft($"{parameter} ({value})", IsTarget(parameter)) || forceCheck);
+        EditorGUILayout.BeginHorizontal();
+        var result = EditorGUILayout.ToggleLeft(parameter, IsTarget(parameter));
+        EditorGUI.BeginDisabledGroup(true);
+        switch (type)
+        {
+            case VRCExpressionParameters.ValueType.Bool:
+                EditorGUILayout.Toggle((bool)value);
+                break;
+            case VRCExpressionParameters.ValueType.Int:
+                EditorGUILayout.IntField((int)value, IntFieldStyle());
+                break;
+            case VRCExpressionParameters.ValueType.Float:
+                EditorGUILayout.FloatField((float)value, FloatFieldStyle());
+                break;
+        }
+        EditorGUI.EndDisabledGroup();
+        EditorGUILayout.EndHorizontal();
+        AdjustTargetParameter(parameter, result || forceCheck);
     }
 
     bool CheckChanged(string parameter, object value)
