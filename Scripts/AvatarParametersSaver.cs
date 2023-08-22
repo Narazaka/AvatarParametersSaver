@@ -20,6 +20,8 @@ public class AvatarParametersSaver : EditorWindow
         GetWindow<AvatarParametersSaver>("Avatar Parameters Saver");
     }
 
+    // assets
+    
     static AnimationClip EmptyClip()
     {
         if (EmptyClipCache == null)
@@ -30,6 +32,31 @@ public class AvatarParametersSaver : EditorWindow
     }
 
     static AnimationClip EmptyClipCache;
+
+    // GUI
+
+    static GUIStyle IntTextStyle()
+    {
+        if (IntTextStyleCache == null)
+        {
+            IntTextStyleCache = new GUIStyle(EditorStyles.label);
+            IntTextStyleCache.normal.textColor = Color.red;
+        }
+        return IntTextStyleCache;
+    }
+    static GUIStyle IntTextStyleCache;
+
+
+    static GUIStyle FloatTextStyle()
+    {
+        if (FloatTextStyleCache == null)
+        {
+            FloatTextStyleCache = new GUIStyle(EditorStyles.label);
+            FloatTextStyleCache.normal.textColor = Color.green;
+        }
+        return FloatTextStyleCache;
+    }
+    static GUIStyle FloatTextStyleCache;
 
     static GUIStyle IntFieldStyle()
     {
@@ -54,9 +81,39 @@ public class AvatarParametersSaver : EditorWindow
     }
     static GUIStyle FloatFieldStyleCache;
 
+    // UI
+
     bool AutoCheckChangedParameters = true;
+    bool PreferEnabledParameters = true;
+    int SortMode;
+    static string[] SortModes = new string[] { "設定順", "名前順" };
+    HashSet<VRCExpressionParameters.ValueType> HideTypes = new HashSet<VRCExpressionParameters.ValueType>();
+    bool IsShow(VRCExpressionParameters.ValueType type)
+    {
+        return !HideTypes.Contains(type);
+    }
+    void AdjustShow(VRCExpressionParameters.ValueType type, bool isShow)
+    {
+        if (isShow)
+        {
+            HideTypes.Remove(type);
+        }
+        else
+        {
+            HideTypes.Add(type);
+        }
+    }
+    void DisplayShowToggle(VRCExpressionParameters.ValueType type, GUIStyle style)
+    {
+        AdjustShow(type, EditorGUILayout.ToggleLeft(type.ToString(), IsShow(type), style));
+    }
+
+    // Settings
+
     string MenuName;
     VRCExpressionParameters.Parameter DriveParameter = new VRCExpressionParameters.Parameter();
+    static string[] ParameterTypes = new string[] { "Int", "Bool" };
+    static string[] SyncModes = new string[] { "プリセットパラメータを同期", "結果パラメータを同期" };
 
     HashSet<string> TargetParameterNames = new HashSet<string>();
 
@@ -76,6 +133,8 @@ public class AvatarParametersSaver : EditorWindow
             TargetParameterNames.Remove(parameter);
         }
     }
+
+    // UI
 
     VRCAvatarDescriptor PreviousAvatar;
     Dictionary<string, object> PreviousValues = new Dictionary<string, object>();
@@ -115,6 +174,41 @@ public class AvatarParametersSaver : EditorWindow
             PreviousValues.Clear();
         }
 
+        EditorGUILayout.LabelField("プリセットメニュー設定", EditorStyles.boldLabel);
+
+        MenuName = EditorGUILayout.TextField("プリセットメニュー名", MenuName);
+        DriveParameter.name = EditorGUILayout.TextField("プリセットパラメーター名", DriveParameter.name);
+        DriveParameter.valueType = (VRCExpressionParameters.ValueType)(EditorGUILayout.Popup("プリセットパラメーター型", (int)DriveParameter.valueType / 2, ParameterTypes) * 2);
+        if (DriveParameter.valueType == VRCExpressionParameters.ValueType.Float)
+        {
+            EditorGUILayout.LabelField("Floatには未対応です");
+            return;
+        }
+        if (DriveParameter.valueType == VRCExpressionParameters.ValueType.Int)
+        {
+            DriveParameter.defaultValue = EditorGUILayout.FloatField("プリセットパラメーター値", DriveParameter.defaultValue);
+        }
+        DriveParameter.networkSynced = GUILayout.Toolbar(DriveParameter.networkSynced ? 0 : 1, SyncModes) == 0;
+
+        if (DriveParameter.networkSynced)
+        {
+            EditorGUILayout.HelpBox("プリセットパラメーターをSyncし、VRC_AvatarParameterDriver側で値を同期せずにlocalOnlyで値を変更するモードです。", MessageType.Info);
+        }
+        else
+        {
+            EditorGUILayout.HelpBox("プリセットパラメーターをSyncせず、VRC_AvatarParameterDriver側で値を同期して変更するモードです。", MessageType.Info);
+        }
+
+        var defaultColor = GUI.backgroundColor;
+        GUI.backgroundColor = Color.yellow;
+        if (GUILayout.Button("保存"))
+        {
+            Save(runtime, avatar);
+        }
+        GUI.backgroundColor = defaultColor;
+
+        EditorGUILayout.LabelField("パラメーター", EditorStyles.boldLabel);
+
         AutoCheckChangedParameters = EditorGUILayout.ToggleLeft("変化したパラメーターを自動でチェック", AutoCheckChangedParameters);
         if (GUILayout.Button("選択をクリア"))
         {
@@ -122,31 +216,34 @@ public class AvatarParametersSaver : EditorWindow
         }
 
         scrollPos = EditorGUILayout.BeginScrollView(scrollPos);
-        foreach (var parameter in avatar.expressionParameters.parameters)
+
+        foreach (var parameter in SortedParameters(avatar.expressionParameters.parameters))
         {
             DipslayParameter(runtime, parameter);
         }
         EditorGUILayout.EndScrollView();
 
-        EditorGUILayout.LabelField("反映条件");
-        MenuName = EditorGUILayout.TextField("メニュー名", MenuName);
-        DriveParameter.valueType = (VRCExpressionParameters.ValueType)EditorGUILayout.EnumPopup("type", DriveParameter.valueType);
-        if (DriveParameter.valueType == VRCExpressionParameters.ValueType.Float)
-        {
-            EditorGUILayout.LabelField("Floatには未対応です");
-            return;
-        }
-        DriveParameter.name = EditorGUILayout.TextField("name", DriveParameter.name);
-        if (DriveParameter.valueType == VRCExpressionParameters.ValueType.Int)
-        {
-            DriveParameter.defaultValue = EditorGUILayout.FloatField("value", DriveParameter.defaultValue);
-        }
-        DriveParameter.networkSynced = !EditorGUILayout.ToggleLeft("localOnly", !DriveParameter.networkSynced);
+        EditorGUILayout.LabelField("表示", EditorStyles.boldLabel);
 
-        if (GUILayout.Button("保存"))
+        SortMode = GUILayout.Toolbar(SortMode, SortModes);
+        EditorGUILayout.BeginHorizontal();
+        EditorGUIUtility.labelWidth = 30;
+        DisplayShowToggle(VRCExpressionParameters.ValueType.Bool, EditorStyles.label);
+        DisplayShowToggle(VRCExpressionParameters.ValueType.Int, IntTextStyle());
+        DisplayShowToggle(VRCExpressionParameters.ValueType.Float, FloatTextStyle());
+        EditorGUIUtility.labelWidth = 0;
+        EditorGUILayout.EndHorizontal();
+        PreferEnabledParameters = EditorGUILayout.ToggleLeft("チェックした項目を優先して並べる", PreferEnabledParameters);
+    }
+
+    IEnumerable<VRCExpressionParameters.Parameter> SortedParameters(VRCExpressionParameters.Parameter[] parameters)
+    {
+        var sorted = SortMode == 0 ? parameters.AsEnumerable() : parameters.OrderBy(p => p.name);
+        if (PreferEnabledParameters)
         {
-            Save(runtime, avatar);
+            sorted = sorted.OrderBy(p => !IsTarget(p.name));
         }
+        return sorted;
     }
 
     void DipslayParameter(LyumaAv3Runtime runtime, VRCExpressionParameters.Parameter parameter)
@@ -227,25 +324,31 @@ public class AvatarParametersSaver : EditorWindow
 
     void DisplayIsTargetToggle(string parameter, object value, VRCExpressionParameters.ValueType type)
     {
-        var forceCheck = AutoCheckChangedParameters && CheckChanged(parameter, value);
-        EditorGUILayout.BeginHorizontal();
-        var result = EditorGUILayout.ToggleLeft(parameter, IsTarget(parameter));
-        EditorGUI.BeginDisabledGroup(true);
-        switch (type)
+        if (AutoCheckChangedParameters && CheckChanged(parameter, value))
         {
-            case VRCExpressionParameters.ValueType.Bool:
-                EditorGUILayout.Toggle((bool)value);
-                break;
-            case VRCExpressionParameters.ValueType.Int:
-                EditorGUILayout.IntField((int)value, IntFieldStyle());
-                break;
-            case VRCExpressionParameters.ValueType.Float:
-                EditorGUILayout.FloatField((float)value, FloatFieldStyle());
-                break;
+            AdjustTargetParameter(parameter, true);
         }
-        EditorGUI.EndDisabledGroup();
-        EditorGUILayout.EndHorizontal();
-        AdjustTargetParameter(parameter, result || forceCheck);
+        if (IsShow(type))
+        {
+            EditorGUILayout.BeginHorizontal();
+            var result = EditorGUILayout.ToggleLeft(parameter, IsTarget(parameter));
+            EditorGUI.BeginDisabledGroup(true);
+            switch (type)
+            {
+                case VRCExpressionParameters.ValueType.Bool:
+                    EditorGUILayout.Toggle((bool)value);
+                    break;
+                case VRCExpressionParameters.ValueType.Int:
+                    EditorGUILayout.IntField((int)value, IntFieldStyle());
+                    break;
+                case VRCExpressionParameters.ValueType.Float:
+                    EditorGUILayout.FloatField((float)value, FloatFieldStyle());
+                    break;
+            }
+            EditorGUI.EndDisabledGroup();
+            EditorGUILayout.EndHorizontal();
+            AdjustTargetParameter(parameter, result);
+        }
     }
 
     bool CheckChanged(string parameter, object value)
@@ -322,7 +425,7 @@ public class AvatarParametersSaver : EditorWindow
         actionState.motion = EmptyClip();
         actionState.writeDefaultValues = false;
         var driver = actionState.AddStateMachineBehaviour<VRCAvatarParameterDriver>();
-        driver.localOnly = !DriveParameter.networkSynced;
+        driver.localOnly = DriveParameter.networkSynced;
         driver.parameters = targetParameters.Select(p => new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter
         {
             type = VRC.SDKBase.VRC_AvatarParameterDriver.ChangeType.Set,
@@ -368,7 +471,7 @@ public class AvatarParametersSaver : EditorWindow
             {
                 nameOrPrefix = DriveParameter.name,
                 syncType = DriveParameter.valueType == VRCExpressionParameters.ValueType.Int ? ParameterSyncType.Int : ParameterSyncType.Bool,
-                localOnly = true,
+                localOnly = !DriveParameter.networkSynced,
                 saved = false,
             },
         };
