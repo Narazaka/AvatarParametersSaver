@@ -31,6 +31,7 @@ public class AvatarParametersSaver : EditorWindow
 
     static AnimationClip EmptyClipCache;
 
+    bool AutoCheckChangedParameters = true;
     string MenuName;
     VRCExpressionParameters.Parameter DriveParameter = new VRCExpressionParameters.Parameter();
 
@@ -52,6 +53,9 @@ public class AvatarParametersSaver : EditorWindow
             TargetParameterNames.Remove(parameter);
         }
     }
+
+    VRCAvatarDescriptor PreviousAvatar;
+    Dictionary<string, object> PreviousValues = new Dictionary<string, object>();
 
     Vector2 scrollPos;
 
@@ -80,6 +84,18 @@ public class AvatarParametersSaver : EditorWindow
         if (runtime == null)
         {
             EditorGUILayout.LabelField("AV3Emulatorが有効であることを確認して下さい");
+        }
+
+        if (PreviousAvatar != avatar)
+        {
+            PreviousAvatar = avatar;
+            PreviousValues.Clear();
+        }
+
+        AutoCheckChangedParameters = EditorGUILayout.ToggleLeft("変化したパラメーターを自動でチェック", AutoCheckChangedParameters);
+        if (GUILayout.Button("選択をクリア"))
+        {
+            TargetParameterNames.Clear();
         }
 
         scrollPos = EditorGUILayout.BeginScrollView(scrollPos);
@@ -188,7 +204,38 @@ public class AvatarParametersSaver : EditorWindow
 
     void DisplayIsTargetToggle(string parameter, object value)
     {
-        AdjustTargetParameter(parameter, EditorGUILayout.ToggleLeft($"{parameter} ({value})", IsTarget(parameter)));
+        var forceCheck = AutoCheckChangedParameters && CheckChanged(parameter, value);
+        AdjustTargetParameter(parameter, EditorGUILayout.ToggleLeft($"{parameter} ({value})", IsTarget(parameter)) || forceCheck);
+    }
+
+    bool CheckChanged(string parameter, object value)
+    {
+        if (PreviousValues.TryGetValue(parameter, out var previousValue))
+        {
+            if (previousValue is bool)
+            {
+                var changed = ((bool)previousValue) != ((bool)value);
+                if (changed) PreviousValues[parameter] = value;
+                return changed;
+            }
+            else if (previousValue is int)
+            {
+                var changed = ((int)previousValue) != ((int)value);
+                if (changed) PreviousValues[parameter] = value;
+                return changed;
+            }
+            else
+            {
+                var changed = ((float)previousValue) != ((float)value);
+                if (changed) PreviousValues[parameter] = value;
+                return changed;
+            }
+        }
+        else
+        {
+            PreviousValues[parameter] = value;
+        }
+        return false;
     }
 
     void Save(LyumaAv3Runtime runtime, VRCAvatarDescriptor avatar)
