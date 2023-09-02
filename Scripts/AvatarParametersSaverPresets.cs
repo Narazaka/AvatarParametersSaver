@@ -9,4 +9,5 @@ public class AvatarParametersSaverPresets : ScriptableObject
     public string parameterName;
     public bool networkSynced;
     public List<AvatarParametersSaverPreset> presets = new List<AvatarParametersSaverPreset>();
+    public int IndexOffset;
 }

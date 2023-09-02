@@ -135,6 +135,7 @@ public class AvatarParametersSaver : EditorWindow
 
     VRCAvatarDescriptor PreviousAvatar;
     Dictionary<string, object> PreviousValues = new Dictionary<string, object>();
+    bool Advanced;
 
     Vector2 scrollPos;
 
@@ -232,6 +233,12 @@ public class AvatarParametersSaver : EditorWindow
         }
         Presets.parameterName = EditorGUILayout.TextField("プリセットパラメーター名", Presets.parameterName);
 
+        Advanced = EditorGUILayout.Foldout(Advanced, "高度な設定");
+        if (Advanced)
+        {
+            Presets.IndexOffset = EditorGUILayout.IntField("パラメーター値のオフセット", Presets.IndexOffset);
+        }
+
         EditorGUILayout.LabelField("プリセット", EditorStyles.boldLabel);
         if (so == null)
         {
@@ -250,8 +257,8 @@ public class AvatarParametersSaver : EditorWindow
                 var menuName = p.menuName;
                 var paramCount = p.parameters.Count;
                 rect.width -= 70;
-                EditorGUIUtility.labelWidth = 100;
-                p.menuName = EditorGUI.TextField(rect, "プリセットメニュー名", menuName);
+                EditorGUIUtility.labelWidth = 110;
+                p.menuName = EditorGUI.TextField(rect, $"{index + 1 + Presets.IndexOffset} プリセットメニュー名", menuName);
                 EditorGUIUtility.labelWidth = 0;
                 rect.x += rect.width;
                 rect.width = 70;
@@ -491,7 +498,7 @@ public class AvatarParametersSaver : EditorWindow
             {
                 name = preset.menuName,
                 parameter = new VRCExpressionsMenu.Control.Parameter { name = Presets.parameterName },
-                value = i + 1,
+                value = i + 1 + Presets.IndexOffset,
                 type = VRCExpressionsMenu.Control.ControlType.Button,
             };
             menu.GetOrAddComponent<ModularAvatarMenuInstaller>();
@@ -553,7 +560,7 @@ public class AvatarParametersSaver : EditorWindow
 
         for (var i = 0; i < Presets.presets.Count; i++)
         {
-            var cnt = i + 1;
+            var cnt = i + 1 + Presets.IndexOffset;
             var preset = Presets.presets[i];
             var actionState = layer.stateMachine.AddState($"Action{cnt}", new Vector3(0, 125 * cnt, 0));
             actionState.motion = EmptyClip();
