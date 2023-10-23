@@ -142,6 +142,11 @@ public class AvatarParametersSaver : EditorWindow
     SerializedObject so;
     UnityEditorInternal.ReorderableList PresetsList;
 
+    void Update()
+    {
+        Repaint();
+    }
+
     void OnGUI()
     {
         if (!Application.isPlaying)
