@@ -76,7 +76,7 @@ public class AvatarParametersSaverPreset
                     case VRCExpressionParameters.ValueType.Float:
                         {
                             var runtimeParameter = runtime.Floats.Find(p => p.name == parameter.name);
-                            runtimeParameter.value = parameter.value;
+                            runtimeParameter.expressionValue = parameter.value;
                             break;
                         }
                 }
