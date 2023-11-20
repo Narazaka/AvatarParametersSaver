@@ -1,9 +1,9 @@
 {
     "name": "AvatarParametersSaver",
     "references": [
-        "GUID:fc900867c0f47cd49b6e2ae4ef907300",
-        "GUID:ad78a2bc77b7491eb34cece69bb8f0e6",
-        "GUID:5ce33783346c3124990afbe7b0390a06"
+        "nadena.dev.modular-avatar.core",
+        "lyuma.av3emulator",
+        "nadena.dev.modular-avatar.core.editor"
     ],
     "includePlatforms": [
         "Editor"
