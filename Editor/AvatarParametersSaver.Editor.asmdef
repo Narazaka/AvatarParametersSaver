@@ -1,11 +1,13 @@
 {
-    "name": "AvatarParametersSaver",
+    "name": "AvatarParametersSaver.Editor",
     "references": [
         "nadena.dev.modular-avatar.core",
-        "lyuma.av3emulator",
-        "nadena.dev.modular-avatar.core.editor"
+        "AvatarParametersSaver",
+        "lyuma.av3emulator"
     ],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

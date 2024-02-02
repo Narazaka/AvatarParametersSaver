@@ -1,4 +1,6 @@
-﻿using Lyuma.Av3Emulator.Runtime;
+﻿#if UNITY_EDITOR
+using Lyuma.Av3Emulator.Runtime;
+#endif
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -86,6 +88,7 @@ namespace net.narazaka.vrchat.avatar_parameters_saver
             }
         }
 
+#if UNITY_EDITOR
         float GetParameterValue(LyumaAv3Runtime runtime, VRCExpressionParameters.Parameter parameter)
         {
             switch (parameter.valueType)
@@ -121,5 +124,6 @@ namespace net.narazaka.vrchat.avatar_parameters_saver
                     return float.NaN;
             }
         }
+#endif
     }
 }

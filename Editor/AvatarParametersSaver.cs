@@ -7,12 +7,10 @@ using nadena.dev.modular_avatar.core;
 using UnityEditor.Animations;
 using System.Linq;
 
-#if UNITY_EDITOR
-
 using UnityEditor;
 using Lyuma.Av3Emulator.Runtime;
 
-namespace net.narazaka.vrchat.avatar_parameters_saver
+namespace net.narazaka.vrchat.avatar_parameters_saver.editor
 {
     public class AvatarParametersSaver : EditorWindow
     {
@@ -608,5 +606,3 @@ namespace net.narazaka.vrchat.avatar_parameters_saver
         }
     }
 }
-
-#endif
