@@ -6,117 +6,120 @@ using System.Linq;
 using UnityEngine;
 using VRC.SDK3.Avatars.ScriptableObjects;
 
-[Serializable]
-public class AvatarParametersSaverPreset
+namespace net.narazaka.vrchat.avatar_parameters_saver
 {
-    public string menuName;
-    public List<AvatarParametersSaverParameter> parameters = new List<AvatarParametersSaverParameter>();
-
-    public bool IsTarget(string parameter)
+    [Serializable]
+    public class AvatarParametersSaverPreset
     {
-        return parameters.Any(p => p.name == parameter);
-    }
+        public string menuName;
+        public List<AvatarParametersSaverParameter> parameters = new List<AvatarParametersSaverParameter>();
 
-    public void AdjustTargetParameter(string parameter, bool isTarget)
-    {
-        if (isTarget)
+        public bool IsTarget(string parameter)
         {
-            if (!parameters.Any(p => p.name == parameter))
-            {
-                parameters.Add(new AvatarParametersSaverParameter { name = parameter });
-            }
+            return parameters.Any(p => p.name == parameter);
         }
-        else
-        {
-            var index = parameters.FindIndex(p => p.name == parameter);
-            if (index != -1)
-            {
-                parameters.RemoveAt(index);
-            }
-        }
-    }
 
-    public void ApplyValues(LyumaAv3Runtime runtime, IEnumerable<VRCExpressionParameters.Parameter> exParameters)
-    {
-        var newParameters = new List<AvatarParametersSaverParameter>();
-        var parametersMap = parameters.ToDictionary(p => p.name, p => p);
-        foreach (var exParameter in exParameters)
+        public void AdjustTargetParameter(string parameter, bool isTarget)
         {
-            if (parametersMap.TryGetValue(exParameter.name, out var parameter))
+            if (isTarget)
             {
-                parameter.value = GetParameterValue(runtime, exParameter);
-                newParameters.Add(parameter);
-            }
-        }
-        // 順序をあわせる
-        parameters = newParameters;
-    }
-
-    public void ValuesToRuntime(LyumaAv3Runtime runtime, IEnumerable<VRCExpressionParameters.Parameter> exParameters)
-    {
-        var parametersMap = parameters.ToDictionary(p => p.name, p => p);
-        foreach (var exParameter in exParameters)
-        {
-            if (parametersMap.TryGetValue(exParameter.name, out var parameter))
-            {
-                switch (exParameter.valueType)
+                if (!parameters.Any(p => p.name == parameter))
                 {
-                    case VRCExpressionParameters.ValueType.Bool:
-                        {
-                            var runtimeParameter = runtime.Bools.Find(p => p.name == parameter.name);
-                            runtimeParameter.value = parameter.value != 0;
-                            break;
-                        }
-                    case VRCExpressionParameters.ValueType.Int:
-                        {
-                            var runtimeParameter = runtime.Ints.Find(p => p.name == parameter.name);
-                            runtimeParameter.value = (int)parameter.value;
-                            break;
-                        }
-                    case VRCExpressionParameters.ValueType.Float:
-                        {
-                            var runtimeParameter = runtime.Floats.Find(p => p.name == parameter.name);
-                            runtimeParameter.expressionValue = parameter.value;
-                            break;
-                        }
+                    parameters.Add(new AvatarParametersSaverParameter { name = parameter });
+                }
+            }
+            else
+            {
+                var index = parameters.FindIndex(p => p.name == parameter);
+                if (index != -1)
+                {
+                    parameters.RemoveAt(index);
                 }
             }
         }
-    }
 
-    float GetParameterValue(LyumaAv3Runtime runtime, VRCExpressionParameters.Parameter parameter)
-    {
-        switch (parameter.valueType)
+        public void ApplyValues(LyumaAv3Runtime runtime, IEnumerable<VRCExpressionParameters.Parameter> exParameters)
         {
-            case VRCExpressionParameters.ValueType.Bool:
+            var newParameters = new List<AvatarParametersSaverParameter>();
+            var parametersMap = parameters.ToDictionary(p => p.name, p => p);
+            foreach (var exParameter in exParameters)
+            {
+                if (parametersMap.TryGetValue(exParameter.name, out var parameter))
                 {
-                    var param = runtime.Bools.Find(v => v.name == parameter.name);
-                    if (param == null)
+                    parameter.value = GetParameterValue(runtime, exParameter);
+                    newParameters.Add(parameter);
+                }
+            }
+            // 順序をあわせる
+            parameters = newParameters;
+        }
+
+        public void ValuesToRuntime(LyumaAv3Runtime runtime, IEnumerable<VRCExpressionParameters.Parameter> exParameters)
+        {
+            var parametersMap = parameters.ToDictionary(p => p.name, p => p);
+            foreach (var exParameter in exParameters)
+            {
+                if (parametersMap.TryGetValue(exParameter.name, out var parameter))
+                {
+                    switch (exParameter.valueType)
                     {
-                        return float.NaN;
+                        case VRCExpressionParameters.ValueType.Bool:
+                            {
+                                var runtimeParameter = runtime.Bools.Find(p => p.name == parameter.name);
+                                runtimeParameter.value = parameter.value != 0;
+                                break;
+                            }
+                        case VRCExpressionParameters.ValueType.Int:
+                            {
+                                var runtimeParameter = runtime.Ints.Find(p => p.name == parameter.name);
+                                runtimeParameter.value = (int)parameter.value;
+                                break;
+                            }
+                        case VRCExpressionParameters.ValueType.Float:
+                            {
+                                var runtimeParameter = runtime.Floats.Find(p => p.name == parameter.name);
+                                runtimeParameter.expressionValue = parameter.value;
+                                break;
+                            }
                     }
-                    return param.value ? 1 : 0;
                 }
-            case VRCExpressionParameters.ValueType.Float:
-                {
-                    var param = runtime.Floats.Find(v => v.name == parameter.name);
-                    if (param == null)
+            }
+        }
+
+        float GetParameterValue(LyumaAv3Runtime runtime, VRCExpressionParameters.Parameter parameter)
+        {
+            switch (parameter.valueType)
+            {
+                case VRCExpressionParameters.ValueType.Bool:
                     {
-                        return float.NaN;
+                        var param = runtime.Bools.Find(v => v.name == parameter.name);
+                        if (param == null)
+                        {
+                            return float.NaN;
+                        }
+                        return param.value ? 1 : 0;
                     }
-                    return param.value;
-                }
-            case VRCExpressionParameters.ValueType.Int:
-                {
-                    var param = runtime.Ints.Find(v => v.name == parameter.name);
-                    if (param == null)
+                case VRCExpressionParameters.ValueType.Float:
                     {
-                        return float.NaN;
+                        var param = runtime.Floats.Find(v => v.name == parameter.name);
+                        if (param == null)
+                        {
+                            return float.NaN;
+                        }
+                        return param.value;
                     }
-                    return param.value;
-                }
-            default:
-                return float.NaN;
+                case VRCExpressionParameters.ValueType.Int:
+                    {
+                        var param = runtime.Ints.Find(v => v.name == parameter.name);
+                        if (param == null)
+                        {
+                            return float.NaN;
+                        }
+                        return param.value;
+                    }
+                default:
+                    return float.NaN;
+            }
         }
     }
 }
