@@ -40,6 +40,7 @@ namespace net.narazaka.vrchat.avatar_parameters_saver
             }
         }
 
+#if UNITY_EDITOR
         public void ApplyValues(LyumaAv3Runtime runtime, IEnumerable<VRCExpressionParameters.Parameter> exParameters)
         {
             var newParameters = new List<AvatarParametersSaverParameter>();
@@ -88,7 +89,6 @@ namespace net.narazaka.vrchat.avatar_parameters_saver
             }
         }
 
-#if UNITY_EDITOR
         float GetParameterValue(LyumaAv3Runtime runtime, VRCExpressionParameters.Parameter parameter)
         {
             switch (parameter.valueType)
