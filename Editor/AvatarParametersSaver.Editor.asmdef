@@ -3,7 +3,8 @@
     "references": [
         "nadena.dev.modular-avatar.core",
         "AvatarParametersSaver",
-        "lyuma.av3emulator"
+        "lyuma.av3emulator",
+        "nadena.dev.ndmf"
     ],
     "includePlatforms": [
         "Editor"

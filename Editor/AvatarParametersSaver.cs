@@ -20,19 +20,6 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
             GetWindow<AvatarParametersSaver>("Avatar Parameters Saver");
         }
 
-        // assets
-
-        static AnimationClip EmptyClip()
-        {
-            if (EmptyClipCache == null)
-            {
-                EmptyClipCache = AssetDatabase.LoadAssetAtPath<AnimationClip>("Packages/net.narazaka.vrchat.avatar-parameters-saver/Empty.anim");
-            }
-            return EmptyClipCache;
-        }
-
-        static AnimationClip EmptyClipCache;
-
         // GUI
 
         static GUIStyle IntTextStyle()
@@ -108,11 +95,9 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
             AdjustShow(type, EditorGUILayout.ToggleLeft(type.ToString(), IsShow(type), style));
         }
 
-        // Settings
-
-        bool AllowLoadPresets;
-
-        AvatarParametersSaverPresets Presets;
+        AvatarParametersPresets PresetsComponent;
+        AvatarParametersPresets SelectingPresetsComponent;
+        AvatarParametersSaverPresetGroup Presets;
         int CurrentPresetIndex
         {
             get => PresetsList == null || PresetsList.index == -1 ? 0 : PresetsList.index;
@@ -133,7 +118,8 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
 
         // UI
 
-        VRCAvatarDescriptor PreviousAvatar;
+        VRCAvatarDescriptor SelectingAvatar;
+        VRCAvatarDescriptor Avatar;
         Dictionary<string, object> PreviousValues = new Dictionary<string, object>();
         bool Advanced;
 
@@ -151,76 +137,82 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
         {
             if (!Application.isPlaying)
             {
-                EditorGUILayout.LabelField("Playしてください");
+                EditorGUILayout.HelpBox("Playしてください", MessageType.Info);
                 return;
             }
 
-            if (Selection.activeGameObject == null)
+            if (Avatar == null)
             {
-                EditorGUILayout.LabelField("Avatarを選択して下さい");
+                EditorGUILayout.HelpBox("Avatarを選択して下さい", MessageType.Info);
+                var avatar = Selection.activeGameObject?.GetComponent<VRCAvatarDescriptor>();
+                if (avatar != null)
+                {
+                    SelectingAvatar = avatar;
+                }
+                SelectingAvatar = EditorGUILayout.ObjectField("Avatar", SelectingAvatar, typeof(VRCAvatarDescriptor), true) as VRCAvatarDescriptor;
+
+                if (GUILayout.Button("選択"))
+                {
+                    Avatar = SelectingAvatar;
+                    SelectingAvatar = null;
+                    PreviousValues.Clear();
+                }
                 return;
             }
-
-            var avatar = Selection.activeGameObject.GetComponent<VRCAvatarDescriptor>();
-            if (avatar == null)
+            else
             {
-                EditorGUILayout.LabelField("Avatarを選択して下さい");
-                return;
+                using (new EditorGUI.DisabledGroupScope(true))
+                {
+                    EditorGUILayout.ObjectField("Avatar", Avatar, typeof(VRCAvatarDescriptor), true);
+                }
+                if (GUILayout.Button("選択解除"))
+                {
+                    if (!EditorUtility.DisplayDialog("警告", "保存していない設定はクリアされますがよろしいですか？", "OK", "Cancel")) return;
+                    Avatar = null;
+                    PreviousValues.Clear();
+                    return;
+                }
             }
 
-            var runtime = avatar.GetComponent<LyumaAv3Runtime>();
+            var runtime = Avatar.GetComponent<LyumaAv3Runtime>();
             if (runtime == null)
             {
                 EditorGUILayout.LabelField("AV3Emulatorが有効であることを確認して下さい");
             }
 
-            if (PreviousAvatar != avatar)
-            {
-                PreviousAvatar = avatar;
-                PreviousValues.Clear();
-            }
-
             if (Presets == null)
             {
-                CreatePresets();
-            }
-
-            if (string.IsNullOrEmpty(AssetDatabase.GetAssetPath(Presets)))
-            {
-                if (AllowLoadPresets)
+                EditorGUILayout.HelpBox("プリセットPrefabを選択して下さい", MessageType.Info);
+                SelectingPresetsComponent = EditorGUILayout.ObjectField("プリセットPrefab", SelectingPresetsComponent, typeof(AvatarParametersPresets), false) as AvatarParametersPresets;
+                if (GUILayout.Button("新規作成"))
                 {
-                    var newPresets = EditorGUILayout.ObjectField("設定をロード", null, typeof(AvatarParametersSaverPresets), false);
-                    if (newPresets != null)
-                    {
-                        Presets = newPresets as AvatarParametersSaverPresets;
-                        so = null;
-                        AllowLoadPresets = false;
-                    }
-                    if (GUILayout.Button("Cancel"))
-                    {
-                        AllowLoadPresets = false;
-                    }
+                    SelectingPresetsComponent = CreatePrefab();
                 }
-                else
+                if (GUILayout.Button("選択"))
                 {
-                    if (GUILayout.Button("設定をロード"))
-                    {
-                        AllowLoadPresets = true;
-                    }
+                    PresetsComponent = SelectingPresetsComponent;
+                    Presets = SelectingPresetsComponent.AvatarParametersSaverPresetGroup;
+                    so = new SerializedObject(PresetsComponent);
+                    PresetsList = null;
+                    PreviousValues.Clear();
                 }
+                return;
             }
             else
             {
-                EditorGUI.BeginDisabledGroup(true);
-                EditorGUILayout.ObjectField("設定", Presets, typeof(AvatarParametersSaverPresets), false);
-                EditorGUI.EndDisabledGroup();
-            }
-
-            if (GUILayout.Button("リセット"))
-            {
-                if (EditorUtility.DisplayDialog("警告", "現在の設定が全てクリアされますがよろしいですか？", "OK", "Cancel"))
+                using (new EditorGUI.DisabledGroupScope(true))
                 {
-                    CreatePresets();
+                    EditorGUILayout.ObjectField("プリセットPrefab", PresetsComponent, typeof(AvatarParametersPresets), false);
+                }
+                if (GUILayout.Button("選択解除"))
+                {
+                    if (!EditorUtility.DisplayDialog("警告", "保存していない設定はクリアされますがよろしいですか？", "OK", "Cancel")) return;
+                    PresetsComponent = null;
+                    Presets = null;
+                    so = null;
+                    PresetsList = null;
+                    PreviousValues.Clear();
+                    return;
                 }
             }
 
@@ -245,10 +237,9 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
             }
 
             EditorGUILayout.LabelField("プリセット", EditorStyles.boldLabel);
-            if (so == null)
+            if (PresetsList == null)
             {
-                so = new SerializedObject(Presets);
-                var presets = so.FindProperty("presets");
+                var presets = so.FindProperty("AvatarParametersSaverPresetGroup").FindPropertyRelative("presets");
                 Debug.Log(Presets);
                 Debug.Log(Presets.presets);
                 Debug.Log(presets);
@@ -278,10 +269,10 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
 
             if (PreviousPresetIndex != CurrentPresetIndex)
             {
-                DriveParameter.ValuesToRuntime(runtime, avatar.expressionParameters.parameters);
+                DriveParameter.ValuesToRuntime(runtime, Avatar.expressionParameters.parameters);
                 PreviousPresetIndex = CurrentPresetIndex;
             }
-            DriveParameter.ApplyValues(runtime, avatar.expressionParameters.parameters);
+            DriveParameter.ApplyValues(runtime, Avatar.expressionParameters.parameters);
 
             GUI.backgroundColor = Color.red;
             if (GUILayout.Button("メニューを保存"))
@@ -296,7 +287,7 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
                     EditorUtility.DisplayDialog("Error", $"空になっているプリセットメニュー名を指定して下さい", "OK");
                     return;
                 }
-                Save(runtime, avatar);
+                Save(runtime, Avatar);
             }
             GUI.backgroundColor = defaultColor;
 
@@ -310,7 +301,7 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
 
             scrollPos = EditorGUILayout.BeginScrollView(scrollPos);
 
-            foreach (var parameter in SortedParameters(avatar.expressionParameters.parameters))
+            foreach (var parameter in SortedParameters(Avatar.expressionParameters.parameters))
             {
                 DipslayParameter(runtime, parameter);
             }
@@ -337,13 +328,6 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
                 sorted = sorted.OrderBy(p => !DriveParameter.IsTarget(p.name));
             }
             return sorted;
-        }
-
-        void CreatePresets()
-        {
-            so = null;
-            // CurrentPresetIndex = 0;
-            Presets = ScriptableObject.CreateInstance<AvatarParametersSaverPresets>();
         }
 
         void DipslayParameter(LyumaAv3Runtime runtime, VRCExpressionParameters.Parameter parameter)
@@ -445,164 +429,33 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
             return false;
         }
 
+        AvatarParametersPresets CreatePrefab()
+        {
+            var path = EditorUtility.SaveFilePanelInProject("save prefab", "AvatarParametersPresets", "prefab", "save prefab", "Assets");
+
+            var go = new GameObject("AvatarParametersPresets");
+            go.AddComponent<ModularAvatarMenuInstaller>();
+            go.AddComponent<AvatarParametersPresets>();
+            PrefabUtility.SaveAsPrefabAsset(go, path);
+            DestroyImmediate(go);
+
+            var prefab = PrefabUtility.LoadPrefabContents(path);
+            var presets = prefab.GetComponent<AvatarParametersPresets>();
+            PrefabUtility.UnloadPrefabContents(prefab);
+            return presets;
+        }
+
         void Save(LyumaAv3Runtime runtime, VRCAvatarDescriptor avatar)
         {
-            Debug.Log(Presets.prefab == null ? "Assets" : AssetDatabase.GetAssetPath(Presets.prefab));
-            var path = EditorUtility.SaveFilePanelInProject("save prefab", Presets.parameterName, "prefab", "save prefab", Presets.prefab == null ? "Assets" : Path.GetDirectoryName(AssetDatabase.GetAssetPath(Presets.prefab)));
-            if (string.IsNullOrEmpty(path))
-            {
-                return;
-            }
+            var path = AssetDatabase.GetAssetPath(PresetsComponent);
+            var prefab = PrefabUtility.LoadPrefabContents(path);
 
-            var animator = MakeAnimator(path);
+            var presets = prefab.GetComponent<AvatarParametersPresets>();
 
-            var prefabExists = File.Exists(path);
-            var go = prefabExists ? PrefabUtility.LoadPrefabContents(path) : new GameObject(Presets.parameterName);
+            presets.AvatarParametersSaverPresetGroup = Presets;
 
-            var prefab = SavePrefab(path, go, animator);
-            SaveAsset(path, prefab);
-
-            if (prefabExists)
-            {
-                PrefabUtility.UnloadPrefabContents(go);
-            }
-            else
-            {
-                DestroyImmediate(go);
-            }
-        }
-
-        GameObject SavePrefab(string path, GameObject go, AnimatorController animator)
-        {
-            var mergeAnimator = go.GetOrAddComponent<ModularAvatarMergeAnimator>();
-            mergeAnimator.animator = animator;
-            mergeAnimator.matchAvatarWriteDefaults = true;
-            mergeAnimator.layerType = VRCAvatarDescriptor.AnimLayerType.FX;
-            var parameters = go.GetOrAddComponent<ModularAvatarParameters>();
-            parameters.parameters = new List<ParameterConfig>
-        {
-            new ParameterConfig
-            {
-                nameOrPrefix = Presets.parameterName,
-                syncType = ParameterSyncType.Int,
-                localOnly = !Presets.networkSynced,
-                saved = false,
-            },
-        };
-            for (var i = go.transform.childCount - 1; i >= 0; i--)
-            {
-                Object.DestroyImmediate(go.transform.GetChild(i).gameObject);
-            }
-            for (var i = 0; i < Presets.presets.Count; i++)
-            {
-                var preset = Presets.presets[i];
-                var menu = new GameObject(preset.menuName);
-                menu.transform.parent = go.transform;
-                var menuItem = menu.GetOrAddComponent<ModularAvatarMenuItem>();
-                menuItem.Control = new VRCExpressionsMenu.Control
-                {
-                    name = preset.menuName,
-                    parameter = new VRCExpressionsMenu.Control.Parameter { name = Presets.parameterName },
-                    value = i + 1 + Presets.IndexOffset,
-                    type = VRCExpressionsMenu.Control.ControlType.Button,
-                };
-                menu.GetOrAddComponent<ModularAvatarMenuInstaller>();
-            }
-            return PrefabUtility.SaveAsPrefabAsset(go, path);
-        }
-
-        void SaveAsset(string path, GameObject go)
-        {
-            Presets.prefab = go;
-            var filename = Path.GetFileNameWithoutExtension(path);
-            var assetPath = Path.Combine(Path.GetDirectoryName(path), $"{filename}.asset");
-            var previousAssetPath = AssetDatabase.GetAssetPath(Presets);
-            if (!string.IsNullOrEmpty(previousAssetPath) && Path.GetFullPath(previousAssetPath) == Path.GetFullPath(assetPath))
-            {
-                EditorUtility.SetDirty(Presets);
-                AssetDatabase.SaveAssets();
-            }
-            else
-            {
-                AssetDatabase.CreateAsset(Presets, assetPath);
-            }
-        }
-
-        AnimatorController MakeAnimator(string path)
-        {
-            var filename = Path.GetFileNameWithoutExtension(path);
-
-            var controllerPath = Path.Combine(Path.GetDirectoryName(path), $"{filename}.controller");
-            var animator = AnimatorController.CreateAnimatorControllerAtPath(controllerPath);
-            var layer = animator.layers[0];
-            layer.stateMachine.anyStatePosition = new Vector3(-250, 250, 0);
-            layer.stateMachine.entryPosition = new Vector3(-250, 0, 0);
-            layer.stateMachine.exitPosition = new Vector3(-250, -250, 0);
-            animator.AddParameter(Presets.parameterName, AnimatorControllerParameterType.Int);
-            /*
-            foreach (var parameter in targetParameters)
-            {
-                animator.AddParameter(parameter.name, ToAnimParamType(parameter.valueType));
-            }
-            foreach (var parameter in targetParameters)
-            {
-                var param = animator.parameters.First(p => p.name == parameter.name);
-                switch (parameter.valueType)
-                {
-                    case VRCExpressionParameters.ValueType.Int:
-                        param.defaultInt = (int)parameter.defaultValue; break;
-                    case VRCExpressionParameters.ValueType.Bool:
-                        param.defaultBool = parameter.defaultValue != 0; break;
-                    case VRCExpressionParameters.ValueType.Float:
-                        param.defaultFloat = parameter.defaultValue; break;
-                }
-            }
-            */
-            var idleState = layer.stateMachine.AddState("Idle", new Vector3(0, 0, 0));
-            idleState.motion = EmptyClip();
-            idleState.writeDefaultValues = false;
-            layer.stateMachine.defaultState = idleState;
-
-            for (var i = 0; i < Presets.presets.Count; i++)
-            {
-                var cnt = i + 1 + Presets.IndexOffset;
-                var preset = Presets.presets[i];
-                var actionState = layer.stateMachine.AddState($"Action{cnt}", new Vector3(0, 125 * cnt, 0));
-                actionState.motion = EmptyClip();
-                actionState.writeDefaultValues = false;
-                var driver = actionState.AddStateMachineBehaviour<VRCAvatarParameterDriver>();
-                driver.localOnly = Presets.networkSynced;
-                driver.parameters = preset.parameters.Select(p => new VRC.SDKBase.VRC_AvatarParameterDriver.Parameter
-                {
-                    type = VRC.SDKBase.VRC_AvatarParameterDriver.ChangeType.Set,
-                    name = p.name,
-                    value = p.value,
-                }).ToList();
-
-                var activeTransition = idleState.AddTransition(actionState);
-                activeTransition.hasExitTime = false;
-                activeTransition.exitTime = 0;
-                activeTransition.duration = 0;
-                activeTransition.AddCondition(AnimatorConditionMode.Equals, cnt, Presets.parameterName);
-                var idleTransition = actionState.AddTransition(idleState);
-                idleTransition.hasExitTime = false;
-                idleTransition.exitTime = 0;
-                idleTransition.duration = 0;
-                idleTransition.AddCondition(AnimatorConditionMode.NotEqual, cnt, Presets.parameterName);
-            }
-
-            return animator;
-        }
-
-        AnimatorControllerParameterType ToAnimParamType(VRCExpressionParameters.ValueType valueType)
-        {
-            switch (valueType)
-            {
-                case VRCExpressionParameters.ValueType.Int: return AnimatorControllerParameterType.Int;
-                case VRCExpressionParameters.ValueType.Bool: return AnimatorControllerParameterType.Bool;
-                case VRCExpressionParameters.ValueType.Float: return AnimatorControllerParameterType.Float;
-                default: return AnimatorControllerParameterType.Trigger;
-            }
+            PrefabUtility.SaveAsPrefabAsset(prefab, path);
+            PrefabUtility.UnloadPrefabContents(prefab);
         }
     }
 }
