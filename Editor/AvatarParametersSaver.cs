@@ -20,54 +20,6 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
             GetWindow<AvatarParametersSaver>("Avatar Parameters Saver");
         }
 
-        // GUI
-
-        static GUIStyle IntTextStyle()
-        {
-            if (IntTextStyleCache == null)
-            {
-                IntTextStyleCache = new GUIStyle(EditorStyles.label);
-                IntTextStyleCache.normal.textColor = Color.red;
-            }
-            return IntTextStyleCache;
-        }
-        static GUIStyle IntTextStyleCache;
-
-
-        static GUIStyle FloatTextStyle()
-        {
-            if (FloatTextStyleCache == null)
-            {
-                FloatTextStyleCache = new GUIStyle(EditorStyles.label);
-                FloatTextStyleCache.normal.textColor = Color.green;
-            }
-            return FloatTextStyleCache;
-        }
-        static GUIStyle FloatTextStyleCache;
-
-        static GUIStyle IntFieldStyle()
-        {
-            if (IntFieldStyleCache == null)
-            {
-                IntFieldStyleCache = new GUIStyle(EditorStyles.textField);
-                IntFieldStyleCache.normal.textColor = Color.red;
-            }
-            return IntFieldStyleCache;
-        }
-        static GUIStyle IntFieldStyleCache;
-
-
-        static GUIStyle FloatFieldStyle()
-        {
-            if (FloatFieldStyleCache == null)
-            {
-                FloatFieldStyleCache = new GUIStyle(EditorStyles.textField);
-                FloatFieldStyleCache.normal.textColor = Color.green;
-            }
-            return FloatFieldStyleCache;
-        }
-        static GUIStyle FloatFieldStyleCache;
-
         // UI
 
         bool AutoCheckChangedParameters = true;
@@ -313,8 +265,8 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
             EditorGUILayout.BeginHorizontal();
             EditorGUIUtility.labelWidth = 30;
             DisplayShowToggle(VRCExpressionParameters.ValueType.Bool, EditorStyles.label);
-            DisplayShowToggle(VRCExpressionParameters.ValueType.Int, IntTextStyle());
-            DisplayShowToggle(VRCExpressionParameters.ValueType.Float, FloatTextStyle());
+            DisplayShowToggle(VRCExpressionParameters.ValueType.Int, UIStyles.IntTextStyle);
+            DisplayShowToggle(VRCExpressionParameters.ValueType.Float, UIStyles.FloatTextStyle);
             EditorGUIUtility.labelWidth = 0;
             EditorGUILayout.EndHorizontal();
             PreferEnabledParameters = EditorGUILayout.ToggleLeft("チェックした項目を優先して並べる", PreferEnabledParameters);
@@ -387,10 +339,10 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
                         EditorGUILayout.Toggle((bool)value);
                         break;
                     case VRCExpressionParameters.ValueType.Int:
-                        EditorGUILayout.IntField((int)value, IntFieldStyle());
+                        EditorGUILayout.IntField((int)value, UIStyles.IntFieldStyle);
                         break;
                     case VRCExpressionParameters.ValueType.Float:
-                        EditorGUILayout.FloatField((float)value, FloatFieldStyle());
+                        EditorGUILayout.FloatField((float)value, UIStyles.FloatFieldStyle);
                         break;
                 }
                 EditorGUI.EndDisabledGroup();
