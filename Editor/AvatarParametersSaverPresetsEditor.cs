@@ -27,6 +27,9 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
                 PrefabUtility.SaveAsPrefabAsset(go, path);
                 DestroyImmediate(go);
             }
+            EditorGUILayout.HelpBox("このアセットは古いプリセットデータです。新しいGameObjectベースのプリセットデータに変換します。", MessageType.Warning);
+            EditorGUILayout.Space();
+            base.OnInspectorGUI();
         }
     }
 }
