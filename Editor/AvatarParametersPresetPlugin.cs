@@ -24,7 +24,7 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
                 foreach (var presets in ctx.AvatarRootObject.GetComponentsInChildren<AvatarParametersPresets>())
                 {
                     StoreAssets(presets.AvatarParametersSaverPresetGroup, presets.gameObject, MakeAnimator(presets.AvatarParametersSaverPresetGroup));
-                    Object.DestroyImmediate(presets);
+                    // Object.DestroyImmediate(presets);
                 }
             });
         }

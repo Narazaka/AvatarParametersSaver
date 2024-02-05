@@ -70,14 +70,14 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
             return GetBasePropertyHeight(property, label) + GetPresetPropertyHeight(property, label);
         }
 
-        public float GetBasePropertyHeight(SerializedProperty property, GUIContent label)
+        public float GetBasePropertyHeight(SerializedProperty property, GUIContent label = null)
         {
             UpdatePropertiesIfNeeded(property);
             var lines = ShowAdvanced ? 6 : 1;
             return EditorGUIUtility.singleLineHeight * lines + EditorGUIUtility.standardVerticalSpacing * (lines + 2) + PresetsList.GetHeight();
         }
 
-        public float GetPresetPropertyHeight(SerializedProperty property, GUIContent label)
+        public float GetPresetPropertyHeight(SerializedProperty property, GUIContent label = null)
         {
             UpdatePropertiesIfNeeded(property);
             return ShowPresetContents ? EditorGUI.GetPropertyHeight(CurrentPreset) + EditorGUIUtility.standardVerticalSpacing : 0;
@@ -92,6 +92,18 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
         {
             position.height = height;
             return position;
+        }
+
+        public int PresetIndex(SerializedProperty property)
+        {
+            UpdatePropertiesIfNeeded(property);
+            return PresetsList.index;
+        }
+
+        public void SetPresetIndex(SerializedProperty property, int index)
+        {
+            UpdatePropertiesIfNeeded(property);
+            PresetsList.index = index;
         }
 
         bool ShowPresetContents => PresetsList.index >= 0;

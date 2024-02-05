@@ -3,7 +3,8 @@
     "references": [
         "nadena.dev.modular-avatar.core",
         "lyuma.av3emulator",
-        "nadena.dev.modular-avatar.core.editor"
+        "nadena.dev.modular-avatar.core.editor",
+        "com.anatawa12.avatar-optimizer.api.editor"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -12,6 +13,12 @@
     "precompiledReferences": [],
     "autoReferenced": false,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.anatawa12.avatar-optimizer",
+            "expression": "[1.6,2.0)",
+            "define": "AvatarParametersSaver_HAS_AVATAR_OPTIMIZER"
+        }
+    ],
     "noEngineReferences": false
 }
