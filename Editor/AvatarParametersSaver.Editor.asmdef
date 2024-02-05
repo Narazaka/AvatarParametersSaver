@@ -4,7 +4,8 @@
         "nadena.dev.modular-avatar.core",
         "AvatarParametersSaver",
         "lyuma.av3emulator",
-        "nadena.dev.ndmf"
+        "nadena.dev.ndmf",
+        "Narazaka.VRChat.AvatarParametersUtil.Editor"
     ],
     "includePlatforms": [
         "Editor"
