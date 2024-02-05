@@ -106,13 +106,13 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
             PresetsList.index = index;
         }
 
-        bool ShowPresetContents => PresetsList.index >= 0;
+        bool ShowPresetContents => PresetsList.index >= 0 && Presets.arraySize > PresetsList.index;
 
         SerializedProperty CurrentPreset => Presets.GetArrayElementAtIndex(PresetsList.index);
 
         void UpdatePropertiesIfNeeded(SerializedProperty property)
         {
-            if (Current?.propertyPath != property.propertyPath)
+            if (!SerializedProperty.EqualContents(Current, property))
             {
                 Current = property;
                 UpdateProperties();

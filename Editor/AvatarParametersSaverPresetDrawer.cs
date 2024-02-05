@@ -27,7 +27,7 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
 
         void CreateParameterList(SerializedProperty property, GUIContent label)
         {
-            if (ParametersList?.serializedProperty.propertyPath == property.FindPropertyRelative(nameof(AvatarParametersSaverPreset.parameters)).propertyPath) return;
+            if (SerializedProperty.EqualContents(ParametersList?.serializedProperty, property.FindPropertyRelative(nameof(AvatarParametersSaverPreset.parameters)))) return;
             if (AvatarParametersUtilEditor == null) AvatarParametersUtilEditor = new AvatarParametersUtilEditor(property.serializedObject);  
 
             var runtime = GetRuntime(property);
