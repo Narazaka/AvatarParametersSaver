@@ -17,13 +17,22 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
+            position = OnBaseGUI(position, property, label);
+            if (ShowPresetContents)
+            {
+                OnPresetGUI(position, property, label);
+            }
+        }
+
+        public Rect OnBaseGUI(Rect position, SerializedProperty property, GUIContent label)
+        {
             UpdatePropertiesIfNeeded(property);
             position.yMin += EditorGUIUtility.standardVerticalSpacing;
             ShowAdvanced = EditorGUI.Foldout(SingleLineRect(position), ShowAdvanced, new GUIContent("Advanced"));
+            position.yMin += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
             if (ShowAdvanced)
             {
                 EditorGUI.indentLevel++;
-                position.yMin += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
                 EditorGUI.PropertyField(SingleLineRect(position), NetworkSynced);
                 position.yMin += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
                 if (NetworkSynced.boolValue)
@@ -38,23 +47,40 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
                 EditorGUI.PropertyField(SingleLineRect(position), ParameterName);
                 position.yMin += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
                 EditorGUI.PropertyField(SingleLineRect(position), IndexOffset);
+                position.yMin += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
                 EditorGUI.indentLevel--;
             }
-            position.yMin += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
             var height = PresetsList.GetHeight();
             PresetsList.DoList(HeightRect(position, height));
+            position.yMin += height + EditorGUIUtility.standardVerticalSpacing;
+            return position;
+        }
+
+        public void OnPresetGUI(Rect position, SerializedProperty property, GUIContent label)
+        {
+            UpdatePropertiesIfNeeded(property);
             if (ShowPresetContents)
             {
-                position.yMin += height + EditorGUIUtility.standardVerticalSpacing;
                 EditorGUI.PropertyField(position, CurrentPreset);
             }
         }
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
+            return GetBasePropertyHeight(property, label) + GetPresetPropertyHeight(property, label);
+        }
+
+        public float GetBasePropertyHeight(SerializedProperty property, GUIContent label)
+        {
             UpdatePropertiesIfNeeded(property);
             var lines = ShowAdvanced ? 6 : 1;
-            return EditorGUIUtility.singleLineHeight * lines + EditorGUIUtility.standardVerticalSpacing * (lines + 2) + PresetsList.GetHeight() + (ShowPresetContents ? EditorGUI.GetPropertyHeight(CurrentPreset) + EditorGUIUtility.standardVerticalSpacing : 0);
+            return EditorGUIUtility.singleLineHeight * lines + EditorGUIUtility.standardVerticalSpacing * (lines + 2) + PresetsList.GetHeight();
+        }
+
+        public float GetPresetPropertyHeight(SerializedProperty property, GUIContent label)
+        {
+            UpdatePropertiesIfNeeded(property);
+            return ShowPresetContents ? EditorGUI.GetPropertyHeight(CurrentPreset) + EditorGUIUtility.standardVerticalSpacing : 0;
         }
 
         Rect SingleLineRect(Rect position)
