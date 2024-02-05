@@ -19,13 +19,22 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
         {
             UpdatePropertiesIfNeeded(property);
             position.yMin += EditorGUIUtility.standardVerticalSpacing;
-            EditorGUI.PropertyField(SingleLineRect(position), NetworkSynced);
-            position.yMin += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
             ShowAdvanced = EditorGUI.Foldout(SingleLineRect(position), ShowAdvanced, new GUIContent("Advanced"));
             if (ShowAdvanced)
             {
                 EditorGUI.indentLevel++;
                 position.yMin += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
+                EditorGUI.PropertyField(SingleLineRect(position), NetworkSynced);
+                position.yMin += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
+                if (NetworkSynced.boolValue)
+                {
+                    EditorGUI.HelpBox(HeightRect(position, EditorGUIUtility.singleLineHeight * 2 + EditorGUIUtility.standardVerticalSpacing), "プリセットパラメーターをSyncし、VRC_AvatarParameterDriver側で値を同期せずにlocalOnlyで値を変更するモードです。", MessageType.Info);
+                }
+                else
+                {
+                    EditorGUI.HelpBox(HeightRect(position, EditorGUIUtility.singleLineHeight * 2 + EditorGUIUtility.standardVerticalSpacing), "プリセットパラメーターをSyncせず、VRC_AvatarParameterDriver側で値を同期して変更するモードです。", MessageType.Info);
+                }
+                position.yMin += (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing) * 2;
                 EditorGUI.PropertyField(SingleLineRect(position), ParameterName);
                 position.yMin += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
                 EditorGUI.PropertyField(SingleLineRect(position), IndexOffset);
@@ -44,7 +53,7 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
             UpdatePropertiesIfNeeded(property);
-            var lines = ShowAdvanced ? 4 : 2;
+            var lines = ShowAdvanced ? 6 : 1;
             return EditorGUIUtility.singleLineHeight * lines + EditorGUIUtility.standardVerticalSpacing * (lines + 2) + PresetsList.GetHeight() + (ShowPresetContents ? EditorGUI.GetPropertyHeight(CurrentPreset) + EditorGUIUtility.standardVerticalSpacing : 0);
         }
 
