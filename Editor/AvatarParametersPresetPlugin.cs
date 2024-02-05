@@ -65,7 +65,7 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
                 {
                     name = preset.menuName,
                     parameter = new VRCExpressionsMenu.Control.Parameter { name = presets.parameterName },
-                    value = i + 1 + presets.IndexOffset,
+                    value = presets.GetPresetParameterValue(i),
                     type = VRCExpressionsMenu.Control.ControlType.Button,
                 };
             }
@@ -88,9 +88,9 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
 
             for (var i = 0; i < presets.presets.Count; i++)
             {
-                var cnt = i + 1 + presets.IndexOffset;
+                var value = presets.GetPresetParameterValue(i);
                 var preset = presets.presets[i];
-                var actionState = layer.stateMachine.AddState($"Action{cnt}", new Vector3(250, 125 * cnt, 0));
+                var actionState = layer.stateMachine.AddState($"Action{value}", new Vector3(250, 125 * value, 0));
                 actionState.motion = EmptyClip;
                 actionState.writeDefaultValues = false;
                 var driver = new VRCAvatarParameterDriver();
@@ -107,12 +107,12 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
                 activeTransition.hasExitTime = false;
                 activeTransition.exitTime = 0;
                 activeTransition.duration = 0;
-                activeTransition.AddCondition(AnimatorConditionMode.Equals, cnt, presets.parameterName);
+                activeTransition.AddCondition(AnimatorConditionMode.Equals, value, presets.parameterName);
                 var idleTransition = actionState.AddTransition(idleState);
                 idleTransition.hasExitTime = false;
                 idleTransition.exitTime = 0;
                 idleTransition.duration = 0;
-                idleTransition.AddCondition(AnimatorConditionMode.NotEqual, cnt, presets.parameterName);
+                idleTransition.AddCondition(AnimatorConditionMode.NotEqual, value, presets.parameterName);
             }
 
             return animator;

@@ -16,12 +16,12 @@ namespace net.narazaka.vrchat.avatar_parameters_saver
         public string menuName;
         public List<AvatarParametersSaverParameter> parameters = new List<AvatarParametersSaverParameter>();
 
-        public bool IsTarget(string parameter)
+        public bool HasParameter(string parameter)
         {
             return parameters.Any(p => p.name == parameter);
         }
 
-        public void AdjustTargetParameter(string parameter, bool isTarget)
+        public void AdjustParameterStore(string parameter, bool isTarget)
         {
             if (isTarget)
             {
@@ -41,11 +41,18 @@ namespace net.narazaka.vrchat.avatar_parameters_saver
         }
 
 #if UNITY_EDITOR
-        public void ApplyValues(LyumaAv3Runtime runtime, IEnumerable<VRCExpressionParameters.Parameter> exParameters)
+        [NonSerialized]
+        public LyumaAv3Runtime runtime;
+
+        public bool HasRuntime => runtime != null;
+
+        public void ApplyValuesFromRuntime() => ApplyValuesFromRuntime(runtime);
+
+        public void ApplyValuesFromRuntime(LyumaAv3Runtime runtime)
         {
             var newParameters = new List<AvatarParametersSaverParameter>();
             var parametersMap = parameters.ToDictionary(p => p.name, p => p);
-            foreach (var exParameter in exParameters)
+            foreach (var exParameter in runtime.avadesc.expressionParameters.parameters)
             {
                 if (parametersMap.TryGetValue(exParameter.name, out var parameter))
                 {
@@ -57,10 +64,12 @@ namespace net.narazaka.vrchat.avatar_parameters_saver
             parameters = newParameters;
         }
 
-        public void ValuesToRuntime(LyumaAv3Runtime runtime, IEnumerable<VRCExpressionParameters.Parameter> exParameters)
+        public void ApplyValuesToRuntime() => ApplyValuesToRuntime(runtime);
+
+        public void ApplyValuesToRuntime(LyumaAv3Runtime runtime)
         {
             var parametersMap = parameters.ToDictionary(p => p.name, p => p);
-            foreach (var exParameter in exParameters)
+            foreach (var exParameter in runtime.avadesc.expressionParameters.parameters)
             {
                 if (parametersMap.TryGetValue(exParameter.name, out var parameter))
                 {

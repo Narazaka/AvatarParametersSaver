@@ -206,7 +206,7 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
                     var paramCount = p.parameters.Count;
                     rect.width -= 70;
                     EditorGUIUtility.labelWidth = 110;
-                    p.menuName = EditorGUI.TextField(rect, $"{index + 1 + Presets.IndexOffset} プリセットメニュー名", menuName);
+                    p.menuName = EditorGUI.TextField(rect, $"{Presets.GetPresetParameterValue(index)} プリセットメニュー名", menuName);
                     EditorGUIUtility.labelWidth = 0;
                     rect.x += rect.width;
                     rect.width = 70;
@@ -221,10 +221,10 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
 
             if (PreviousPresetIndex != CurrentPresetIndex)
             {
-                DriveParameter.ValuesToRuntime(runtime, Avatar.expressionParameters.parameters);
+                DriveParameter.ApplyValuesToRuntime(runtime);
                 PreviousPresetIndex = CurrentPresetIndex;
             }
-            DriveParameter.ApplyValues(runtime, Avatar.expressionParameters.parameters);
+            DriveParameter.ApplyValuesFromRuntime(runtime);
 
             GUI.backgroundColor = Color.red;
             if (GUILayout.Button("メニューを保存"))
@@ -277,7 +277,7 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
             var sorted = SortMode == 0 ? parameters.AsEnumerable() : parameters.OrderBy(p => p.name);
             if (PreferEnabledParameters)
             {
-                sorted = sorted.OrderBy(p => !DriveParameter.IsTarget(p.name));
+                sorted = sorted.OrderBy(p => !DriveParameter.HasParameter(p.name));
             }
             return sorted;
         }
@@ -326,12 +326,12 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
         {
             if (AutoCheckChangedParameters && CheckChanged(parameter, value))
             {
-                DriveParameter.AdjustTargetParameter(parameter, true);
+                DriveParameter.AdjustParameterStore(parameter, true);
             }
             if (IsShow(type))
             {
                 EditorGUILayout.BeginHorizontal();
-                var result = EditorGUILayout.ToggleLeft(parameter, DriveParameter.IsTarget(parameter));
+                var result = EditorGUILayout.ToggleLeft(parameter, DriveParameter.HasParameter(parameter));
                 EditorGUI.BeginDisabledGroup(true);
                 switch (type)
                 {
@@ -347,7 +347,7 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
                 }
                 EditorGUI.EndDisabledGroup();
                 EditorGUILayout.EndHorizontal();
-                DriveParameter.AdjustTargetParameter(parameter, result);
+                DriveParameter.AdjustParameterStore(parameter, result);
             }
         }
 
