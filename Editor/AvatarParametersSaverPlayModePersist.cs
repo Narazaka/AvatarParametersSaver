@@ -89,8 +89,13 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
                 foreach (var storeDataGroup in storeData.StoreDataGroups)
                 {
                     var obj = EditorUtility.InstanceIDToObject(storeDataGroup.instanceID) as AvatarParametersPresets;
+                    if (obj == null) continue;
                     UndoUtility.RecordObject(obj, "play mode restore");
-                    obj.AvatarParametersSaverPresetGroup = storeDataGroup.avatarParametersSaverPresetGroup;
+                    if (obj.AvatarParametersSaverPresetGroup == null) obj.AvatarParametersSaverPresetGroup = new AvatarParametersSaverPresetGroup();
+                    obj.AvatarParametersSaverPresetGroup.parameterName = storeDataGroup.avatarParametersSaverPresetGroup.parameterName;
+                    obj.AvatarParametersSaverPresetGroup.networkSynced = storeDataGroup.avatarParametersSaverPresetGroup.networkSynced;
+                    obj.AvatarParametersSaverPresetGroup.presets = storeDataGroup.avatarParametersSaverPresetGroup.presets;
+                    obj.AvatarParametersSaverPresetGroup.IndexOffset = storeDataGroup.avatarParametersSaverPresetGroup.IndexOffset;
                 }
             }
         }
