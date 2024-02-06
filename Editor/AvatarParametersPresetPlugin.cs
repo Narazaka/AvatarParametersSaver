@@ -41,8 +41,6 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
             parentMenu.Control = new VRCExpressionsMenu.Control
             {
                 name = go.name,
-                parameter = new VRCExpressionsMenu.Control.Parameter { name = parameterName },
-                value = 0,
                 type = VRCExpressionsMenu.Control.ControlType.SubMenu,
             };
             parentMenu.MenuSource = SubmenuSource.Children;
