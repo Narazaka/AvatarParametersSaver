@@ -7,6 +7,7 @@ namespace net.narazaka.vrchat.avatar_parameters_saver
     [Serializable]
     public class AvatarParametersSaverPresetGroup
     {
+        public Texture2D icon;
         public string parameterName;
         public bool networkSynced;
         public List<AvatarParametersSaverPreset> presets = new List<AvatarParametersSaverPreset>();

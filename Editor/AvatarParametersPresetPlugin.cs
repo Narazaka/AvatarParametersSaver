@@ -42,6 +42,7 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
             {
                 name = go.name,
                 type = VRCExpressionsMenu.Control.ControlType.SubMenu,
+                icon = presets.icon,
             };
             parentMenu.MenuSource = SubmenuSource.Children;
             var mergeAnimator = go.GetOrAddComponent<ModularAvatarMergeAnimator>();
@@ -72,6 +73,7 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
                     parameter = new VRCExpressionsMenu.Control.Parameter { name = parameterName },
                     value = presets.GetPresetParameterValue(i),
                     type = VRCExpressionsMenu.Control.ControlType.Button,
+                    icon = preset.icon,
                 };
             }
         }

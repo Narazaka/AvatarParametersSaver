@@ -8,6 +8,7 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
     public class AvatarParametersSaverPresetGroupDrawer : PropertyDrawer
     {
         SerializedProperty Current;
+        SerializedProperty Icon;
         SerializedProperty ParameterName;
         SerializedProperty NetworkSynced;
         SerializedProperty Presets;
@@ -28,6 +29,8 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
         {
             UpdatePropertiesIfNeeded(property);
             position.yMin += EditorGUIUtility.standardVerticalSpacing;
+            EditorGUI.PropertyField(SingleLineRect(position), Icon);
+            position.yMin += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
             ShowAdvanced = EditorGUI.Foldout(SingleLineRect(position), ShowAdvanced, new GUIContent("Advanced"));
             position.yMin += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
             if (ShowAdvanced)
@@ -75,7 +78,7 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
         public float GetBasePropertyHeight(SerializedProperty property, GUIContent label = null)
         {
             UpdatePropertiesIfNeeded(property);
-            var lines = ShowAdvanced ? 8 : 1;
+            var lines = ShowAdvanced ? 9 : 2;
             return EditorGUIUtility.singleLineHeight * lines + EditorGUIUtility.standardVerticalSpacing * (lines + 2) + PresetsList.GetHeight();
         }
 
@@ -123,6 +126,7 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
 
         void UpdateProperties()
         {
+            Icon = Current.FindPropertyRelative(nameof(AvatarParametersSaverPresetGroup.icon));
             ParameterName = Current.FindPropertyRelative(nameof(AvatarParametersSaverPresetGroup.parameterName));
             NetworkSynced = Current.FindPropertyRelative(nameof(AvatarParametersSaverPresetGroup.networkSynced));
             Presets = Current.FindPropertyRelative(nameof(AvatarParametersSaverPresetGroup.presets));
@@ -132,14 +136,20 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
             PresetsList.drawElementCallback = (rect, index, isActive, isFocused) =>
             {
                 var element = Presets.GetArrayElementAtIndex(index);
-                var menuName = element.FindPropertyRelative("menuName");
-                var parameters = element.FindPropertyRelative("parameters");
+                var icon = element.FindPropertyRelative(nameof(AvatarParametersSaverPreset.icon));
+                var menuName = element.FindPropertyRelative(nameof(AvatarParametersSaverPreset.menuName));
+                var parameters = element.FindPropertyRelative(nameof(AvatarParametersSaverPreset.parameters));
                 rect.y += EditorGUIUtility.standardVerticalSpacing;
                 rect.height = EditorGUIUtility.singleLineHeight;
-                rect.width -= 100;
+                rect.width -= 102;
+                var width = rect.width;
+                rect.width = width * 3 / 4;
                 EditorGUIUtility.labelWidth = 55;
                 EditorGUI.PropertyField(rect, menuName, new GUIContent($"Preset {avatar_parameters_saver.AvatarParametersSaverPresetGroup.GetPresetParameterValue(index, IndexOffset.intValue)}"));
                 EditorGUIUtility.labelWidth = 0;
+                rect.x += rect.width + 2;
+                rect.width = width / 4;
+                EditorGUI.PropertyField(rect, icon, GUIContent.none);
                 rect.x += rect.width;
                 rect.width = 100;
                 EditorGUI.LabelField(rect, $"{parameters.arraySize} Parameters");

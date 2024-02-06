@@ -96,6 +96,7 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
                     obj.AvatarParametersSaverPresetGroup.networkSynced = storeDataGroup.avatarParametersSaverPresetGroup.networkSynced;
                     obj.AvatarParametersSaverPresetGroup.presets = storeDataGroup.avatarParametersSaverPresetGroup.presets;
                     obj.AvatarParametersSaverPresetGroup.IndexOffset = storeDataGroup.avatarParametersSaverPresetGroup.IndexOffset;
+                    obj.AvatarParametersSaverPresetGroup.icon = storeDataGroup.avatarParametersSaverPresetGroup.icon;
                 }
             }
         }
