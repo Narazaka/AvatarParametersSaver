@@ -1,6 +1,7 @@
 #if AvatarParametersSaver_HAS_AVATAR_OPTIMIZER && UNITY_EDITOR
 
 using Anatawa12.AvatarOptimizer.API;
+using UnityEditor;
 
 namespace net.narazaka.vrchat.avatar_parameters_saver
 {
@@ -14,7 +15,7 @@ namespace net.narazaka.vrchat.avatar_parameters_saver
 
         protected override void CollectDependency(AvatarParametersPresets component, ComponentDependencyCollector collector)
         {
-            collector.MarkEntrypoint();
+            if (EditorApplication.isPlaying) collector.MarkEntrypoint();
         }
     }
 }
