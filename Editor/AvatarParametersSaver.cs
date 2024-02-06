@@ -29,6 +29,7 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
             if (!Application.isPlaying)
             {
                 EditorGUILayout.HelpBox("Playしてください", MessageType.Info);
+                EditorGUILayout.HelpBox("プリセットはアバターオブジェクトを右クリックして「Modular Avatar」→「AvatarParametersPresets」で作成できます。", MessageType.Info);
                 return;
             }
 
@@ -60,6 +61,7 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
 
             if (AvatarParametersPresetsList?.Length > 1)
             {
+                EditorGUILayout.LabelField("プリセット");
                 foreach (var presets in AvatarParametersPresetsList)
                 {
                     EditorGUILayout.BeginHorizontal();
@@ -85,23 +87,25 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
             {
                 Presets = null;
                 EditorGUILayout.HelpBox("プリセットを選択して下さい", MessageType.Info);
-                
+            }
+            EditorGUILayout.HelpBox("プリセットを追加・削除する場合はPlayモードを抜けて下さい", MessageType.Info);
+            if (Presets == null)
+            {
                 return;
             }
-            else
-            {
-                EditorGUILayout.LabelField($"プリセット: {NoAAOName(Presets.name)}", EditorStyles.largeLabel);
-            }
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField($"{NoOptName(Presets.name)}", UIStyles.HeaderLabel);
+            EditorGUILayout.Space();
 
             PresetEditor.Runtime = runtime;
             PresetEditor.OnInspectorGUI();
         }
 
-        System.Text.RegularExpressions.Regex AAONameRe = new System.Text.RegularExpressions.Regex(@"^.*?([^$]+)\$[^$]+$");
+        System.Text.RegularExpressions.Regex OptNameRe = new System.Text.RegularExpressions.Regex(@"^.*?([^$]+)\$[^$]+$");
 
-        string NoAAOName(string name)
+        string NoOptName(string name)
         {
-            return AAONameRe.Replace(name, @"$1");
+            return OptNameRe.Replace(name, @"$1");
         }
     }
 }

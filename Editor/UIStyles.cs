@@ -62,5 +62,19 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
             }
         }
         static GUIStyle FloatFieldStyleCache;
+
+        public static GUIStyle HeaderLabel
+        {
+            get
+            {
+                if (HeaderLabelCache == null)
+                {
+                    HeaderLabelCache = new GUIStyle(EditorStyles.largeLabel);
+                    HeaderLabelCache.fontStyle = FontStyle.Bold;
+                }
+                return HeaderLabelCache;
+            }
+        }
+        static GUIStyle HeaderLabelCache;
     }
 }
