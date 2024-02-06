@@ -23,19 +23,25 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
             {
                 foreach (var presets in ctx.AvatarRootObject.GetComponentsInChildren<AvatarParametersPresets>())
                 {
-                    StoreAssets(presets.AvatarParametersSaverPresetGroup, presets.gameObject, MakeAnimator(presets.AvatarParametersSaverPresetGroup));
-                    // Object.DestroyImmediate(presets);
+                    var parameterName = ParameterName(presets.AvatarParametersSaverPresetGroup, presets.gameObject);
+                    var animator = MakeAnimator(presets.AvatarParametersSaverPresetGroup, parameterName);
+                    StoreAssets(presets.AvatarParametersSaverPresetGroup, presets.gameObject, parameterName, animator);
                 }
             });
         }
 
-        void StoreAssets(AvatarParametersSaverPresetGroup presets, GameObject go, AnimatorController animator)
+        string ParameterName(AvatarParametersSaverPresetGroup presets, GameObject go)
+        {
+            return string.IsNullOrEmpty(presets.parameterName) ? go.name : presets.parameterName;
+        }
+
+        void StoreAssets(AvatarParametersSaverPresetGroup presets, GameObject go, string parameterName, AnimatorController animator)
         {
             var parentMenu = go.GetOrAddComponent<ModularAvatarMenuItem>();
             parentMenu.Control = new VRCExpressionsMenu.Control
             {
                 name = go.name,
-                parameter = new VRCExpressionsMenu.Control.Parameter { name = presets.parameterName },
+                parameter = new VRCExpressionsMenu.Control.Parameter { name = parameterName },
                 value = 0,
                 type = VRCExpressionsMenu.Control.ControlType.SubMenu,
             };
@@ -49,10 +55,11 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
             {
                 new ParameterConfig
                 {
-                    nameOrPrefix = presets.parameterName,
+                    nameOrPrefix = parameterName,
                     syncType = ParameterSyncType.Int,
                     localOnly = !presets.networkSynced,
                     saved = false,
+                    internalParameter = string.IsNullOrEmpty(presets.parameterName),
                 },
             };
             for (var i = 0; i < presets.presets.Count; i++)
@@ -64,14 +71,14 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
                 menuItem.Control = new VRCExpressionsMenu.Control
                 {
                     name = preset.menuName,
-                    parameter = new VRCExpressionsMenu.Control.Parameter { name = presets.parameterName },
+                    parameter = new VRCExpressionsMenu.Control.Parameter { name = parameterName },
                     value = presets.GetPresetParameterValue(i),
                     type = VRCExpressionsMenu.Control.ControlType.Button,
                 };
             }
         }
 
-        AnimatorController MakeAnimator(AvatarParametersSaverPresetGroup presets)
+        AnimatorController MakeAnimator(AvatarParametersSaverPresetGroup presets, string parameterName)
         {
             var animator = new AnimatorController();
             if (animator.layers.Length == 0) animator.AddLayer("Base Layer");
@@ -79,7 +86,7 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
             layer.stateMachine.anyStatePosition = new Vector3(-250, 250, 0);
             layer.stateMachine.entryPosition = new Vector3(-250, 0, 0);
             layer.stateMachine.exitPosition = new Vector3(-250, -250, 0);
-            animator.AddParameter(presets.parameterName, AnimatorControllerParameterType.Int);
+            animator.AddParameter(parameterName, AnimatorControllerParameterType.Int);
 
             var idleState = layer.stateMachine.AddState("Idle", new Vector3(0, 0, 0));
             idleState.motion = EmptyClip;
@@ -107,12 +114,12 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
                 activeTransition.hasExitTime = false;
                 activeTransition.exitTime = 0;
                 activeTransition.duration = 0;
-                activeTransition.AddCondition(AnimatorConditionMode.Equals, value, presets.parameterName);
+                activeTransition.AddCondition(AnimatorConditionMode.Equals, value, parameterName);
                 var idleTransition = actionState.AddTransition(idleState);
                 idleTransition.hasExitTime = false;
                 idleTransition.exitTime = 0;
                 idleTransition.duration = 0;
-                idleTransition.AddCondition(AnimatorConditionMode.NotEqual, value, presets.parameterName);
+                idleTransition.AddCondition(AnimatorConditionMode.NotEqual, value, parameterName);
             }
 
             return animator;

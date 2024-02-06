@@ -46,6 +46,8 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
                 position.yMin += (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing) * 2;
                 EditorGUI.PropertyField(SingleLineRect(position), ParameterName);
                 position.yMin += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
+                EditorGUI.HelpBox(HeightRect(position, EditorGUIUtility.singleLineHeight * 2 + EditorGUIUtility.standardVerticalSpacing), "パラメーター名を指定しない場合、オブジェクト名が内部パラメーター名として使われます。", MessageType.Info);
+                position.yMin += (EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing) * 2;
                 EditorGUI.PropertyField(SingleLineRect(position), IndexOffset);
                 position.yMin += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
                 EditorGUI.indentLevel--;
@@ -73,7 +75,7 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
         public float GetBasePropertyHeight(SerializedProperty property, GUIContent label = null)
         {
             UpdatePropertiesIfNeeded(property);
-            var lines = ShowAdvanced ? 6 : 1;
+            var lines = ShowAdvanced ? 8 : 1;
             return EditorGUIUtility.singleLineHeight * lines + EditorGUIUtility.standardVerticalSpacing * (lines + 2) + PresetsList.GetHeight();
         }
 
