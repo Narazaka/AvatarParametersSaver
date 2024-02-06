@@ -1,3 +1,4 @@
+using nadena.dev.modular_avatar.core;
 using UnityEditor;
 
 namespace net.narazaka.vrchat.avatar_parameters_saver.editor
@@ -14,6 +15,14 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
 
         public override void OnInspectorGUI()
         {
+            if ((target as AvatarParametersPresets).GetComponent<ModularAvatarMenuInstaller>() == null)
+            {
+                EditorGUILayout.HelpBox("このコンポーネントはMA Menu Itemのように振る舞います。\nMA Menu Installerを同時に付けるとインストール先を指定できます。", MessageType.Info);
+            }
+            else
+            {
+                EditorGUILayout.HelpBox("このコンポーネントはMA Menu Itemのように振る舞います。\nMA Menu Installerのインストール先にメニューが生成されます。", MessageType.Info);
+            }
             serializedObject.Update();
             EditorGUILayout.PropertyField(AvatarParametersSaverPresetGroup);
             if (serializedObject.hasModifiedProperties)
