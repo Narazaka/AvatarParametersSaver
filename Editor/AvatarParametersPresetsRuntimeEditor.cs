@@ -61,28 +61,29 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
             AvatarParametersSaverPresetGroupDrawer.OnBaseGUI(groupBasePosition, AvatarParametersSaverPresetGroup, new GUIContent(serializedObject.targetObject.name));
             
             var presetIndex = AvatarParametersSaverPresetGroupDrawer.PresetIndex(AvatarParametersSaverPresetGroup);
-            
-            if (presetIndex < 0) return;
-            
-            Preset = Presets.GetArrayElementAtIndex(presetIndex);
-            PresetParameters = Preset.FindPropertyRelative(nameof(AvatarParametersSaverPreset.parameters));
-            ParameterNamesSet = MakeParameterNamesSet(PresetParameters);
-            if (PresetIndex != presetIndex)
+
+            if (presetIndex >= 0)
             {
-                RecordObject("preset selection change");
-                PresetIndex = presetIndex;
-                if (PresetIndex >= 0)
+                Preset = Presets.GetArrayElementAtIndex(presetIndex);
+                PresetParameters = Preset.FindPropertyRelative(nameof(AvatarParametersSaverPreset.parameters));
+                ParameterNamesSet = MakeParameterNamesSet(PresetParameters);
+                if (PresetIndex != presetIndex)
                 {
-                    ApplyValuesToRuntime(Runtime, Preset);
+                    RecordObject("preset selection change");
+                    PresetIndex = presetIndex;
+                    if (PresetIndex >= 0)
+                    {
+                        ApplyValuesToRuntime(Runtime, Preset);
+                    }
                 }
+                ApplyValuesFromRuntime(Runtime, Preset);
+
+                PresetGUIHeader();
+
+                ScrollPosition = EditorGUILayout.BeginScrollView(ScrollPosition);
+                PresetGUI();
+                EditorGUILayout.EndScrollView();
             }
-            ApplyValuesFromRuntime(Runtime, Preset);
-
-            PresetGUIHeader();
-
-            ScrollPosition = EditorGUILayout.BeginScrollView(ScrollPosition);
-            PresetGUI();
-            EditorGUILayout.EndScrollView();
 
             if (serializedObject.hasModifiedProperties)
             {
