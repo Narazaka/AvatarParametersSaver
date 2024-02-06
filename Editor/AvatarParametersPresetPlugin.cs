@@ -61,11 +61,29 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
                     internalParameter = string.IsNullOrEmpty(presets.parameterName),
                 },
             };
+            var redirect = new GameObject("__AvatarParametersPresets__Redirect__");
+            redirect.transform.parent = go.transform;
+            var redirectCount = 0;
             for (var i = 0; i < presets.presets.Count; i++)
             {
                 var preset = presets.presets[i];
-                var menu = new GameObject(preset.menuName);
-                menu.transform.parent = go.transform;
+                var menuTransform = go.transform.Find(preset.menuName);
+                GameObject menu;
+                if (menuTransform == null)
+                {
+                    menu = new GameObject(preset.menuName);
+                    menu.transform.parent = go.transform;
+                }
+                else
+                {
+                    menu = menuTransform.gameObject;
+                    if (menu.GetComponent<ModularAvatarMenuInstaller>() != null)
+                    {
+                        // 直下にあると子も出来てしまう
+                        menuTransform.parent = redirect.transform;
+                        redirectCount++;
+                    }
+                }
                 var menuItem = menu.GetOrAddComponent<ModularAvatarMenuItem>();
                 menuItem.Control = new VRCExpressionsMenu.Control
                 {
@@ -75,6 +93,14 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
                     type = VRCExpressionsMenu.Control.ControlType.Button,
                     icon = preset.icon,
                 };
+            }
+            if (redirectCount == 0)
+            {
+                Object.DestroyImmediate(redirect);
+            }
+            if (redirectCount == presets.presets.Count)
+            {
+                Object.DestroyImmediate(parentMenu);
             }
         }
 
