@@ -42,12 +42,12 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
                 rect.y += EditorGUIUtility.standardVerticalSpacing;
                 rect.height = EditorGUIUtility.singleLineHeight;
                 rect.width -= 100;
+                EditorGUIUtility.labelWidth = 55;
                 AvatarParametersUtilEditor.ShowParameterNameField(rect, name);
-                // EditorGUI.PropertyField(rect, name);
+                EditorGUIUtility.labelWidth = 0;
                 rect.x += rect.width;
                 rect.width = 100;
                 AvatarParametersUtilEditor.ShowParameterValueField(rect, name.stringValue, value, GUIContent.none);
-                // EditorGUI.PropertyField(rect, value, GUIContent.none);
             };
             ParametersList.elementHeight = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing * 2;
         }

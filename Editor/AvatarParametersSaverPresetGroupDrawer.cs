@@ -137,7 +137,9 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
                 rect.y += EditorGUIUtility.standardVerticalSpacing;
                 rect.height = EditorGUIUtility.singleLineHeight;
                 rect.width -= 100;
+                EditorGUIUtility.labelWidth = 55;
                 EditorGUI.PropertyField(rect, menuName, new GUIContent($"Preset {avatar_parameters_saver.AvatarParametersSaverPresetGroup.GetPresetParameterValue(index, IndexOffset.intValue)}"));
+                EditorGUIUtility.labelWidth = 0;
                 rect.x += rect.width;
                 rect.width = 100;
                 EditorGUI.LabelField(rect, $"{parameters.arraySize} Parameters");
