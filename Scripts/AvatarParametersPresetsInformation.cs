@@ -15,7 +15,11 @@ namespace net.narazaka.vrchat.avatar_parameters_saver
 
         protected override void CollectDependency(AvatarParametersPresets component, ComponentDependencyCollector collector)
         {
-            if (EditorApplication.isPlaying) collector.MarkEntrypoint();
+            if (EditorApplication.isPlaying)
+            {
+                collector.MarkEntrypoint();
+                collector.AddDependency(component.transform.parent);
+            }
         }
     }
 }
