@@ -1,6 +1,6 @@
 {
   "name": "net.narazaka.vrchat.avatar-parameters-saver",
-  "version": "3.0.0-alpha.9",
+  "version": "3.0.0-beta.0",
   "displayName": "Avatar Parameters Saver",
   "description": "Save AV3Emu runtime Avatar Parameters to Parameter Driver",
   "author": {
@@ -13,6 +13,6 @@
   "vpmDependencies": {
     "nadena.dev.modular-avatar": ">=1.5.0 <2.0.0-a",
     "lyuma.av3emulator": ">=3.2.0 <4.0.0-a",
-    "net.narazaka.vrchat.avatar-parameters-util": ">=1.0.1 <2.0.0-a"
+    "net.narazaka.vrchat.avatar-parameters-util": ">=1.0.2 <2.0.0-a"
   }
 }
