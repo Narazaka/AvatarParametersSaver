@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEditor;
-using UnityEditorInternal;
 using nadena.dev.modular_avatar.core;
 
 namespace net.narazaka.vrchat.avatar_parameters_saver.editor
@@ -12,7 +11,7 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
         {
             if (GUILayout.Button("Convert to new prefab"))
             {
-                var path = EditorUtility.SaveFilePanelInProject("save prefab", target.name, "prefab", "save prefab", "Assets");
+                var path = EditorUtility.SaveFilePanelInProject("save prefab", target.name, "prefab", "save prefab", System.IO.Path.GetDirectoryName(AssetDatabase.GetAssetPath(target)));
 
                 var go = new GameObject(target.name);
                 go.AddComponent<ModularAvatarMenuInstaller>();
