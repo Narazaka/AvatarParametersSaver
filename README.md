@@ -22,6 +22,8 @@ Play時の現在のパラメーターをParameter Driverとして保存出来る
 
 ## 更新履歴
 
+- 3.0.0-beta.2
+  - IEditorOnly
 - 3.0.0-beta.1
   - データはコンポーネントに保持するように
     - NDMF利用の事後生成に
