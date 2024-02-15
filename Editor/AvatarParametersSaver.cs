@@ -59,7 +59,7 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
             EditorGUILayout.ObjectField("Avatar", Avatar, typeof(VRCAvatarDescriptor), true);
             EditorGUI.EndDisabledGroup();
 
-            if (AvatarParametersPresetsList?.Length > 1)
+            if (AvatarParametersPresetsList?.Length > 0)
             {
                 EditorGUILayout.LabelField("プリセット");
                 foreach (var presets in AvatarParametersPresetsList)
