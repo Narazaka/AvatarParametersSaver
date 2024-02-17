@@ -26,10 +26,7 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
                     var parameterName = ParameterName(presets.AvatarParametersSaverPresetGroup, presets.gameObject);
                     var animator = MakeAnimator(presets.AvatarParametersSaverPresetGroup, parameterName);
                     StoreAssets(presets.AvatarParametersSaverPresetGroup, presets.gameObject, parameterName, animator);
-                    if (!EditorApplication.isPlaying)
-                    {
-                        Object.DestroyImmediate(presets);
-                    }
+                    Object.DestroyImmediate(presets);
                 }
             });
         }

@@ -87,7 +87,7 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
 
             if (serializedObject.hasModifiedProperties)
             {
-                AvatarParametersSaverPlayModePersist.Store((AvatarParametersPresets)target);
+                AvatarParametersSaverPlayModePersist.Store((AvatarParametersSaverPlayModePersist.StoreDataGroupAsset)target);
             }
             serializedObject.ApplyModifiedProperties();
         }

@@ -14,10 +14,10 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
         }
 
         AvatarParametersPresetsRuntimeEditor PresetEditor;
-        AvatarParametersPresets Presets;
+        AvatarParametersSaverPlayModePersist.StoreDataGroupAsset Presets;
 
         VRCAvatarDescriptor Avatar;
-        AvatarParametersPresets[] AvatarParametersPresetsList;
+        AvatarParametersSaverPlayModePersist.StoreDataGroupAsset[] AvatarParametersPresetsList;
 
         void Update()
         {
@@ -38,7 +38,11 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
             {
                 Debug.Log("Avatar changed");
                 Avatar = avatar;
-                AvatarParametersPresetsList = Avatar == null ? null : Avatar.GetComponentsInChildren<AvatarParametersPresets>();
+                AvatarParametersPresetsList = null;
+            }
+            if (AvatarParametersPresetsList == null)
+            {
+                AvatarParametersPresetsList = Avatar == null ? null : AvatarParametersSaverPlayModePersist.ForAvatar(Avatar);
             }
 
             if (Avatar == null)
@@ -59,7 +63,7 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
             EditorGUILayout.ObjectField("Avatar", Avatar, typeof(VRCAvatarDescriptor), true);
             EditorGUI.EndDisabledGroup();
 
-            if (AvatarParametersPresetsList?.Length > 0)
+            if (AvatarParametersPresetsList != null && AvatarParametersPresetsList.Length > 0)
             {
                 EditorGUILayout.LabelField("プリセット");
                 foreach (var presets in AvatarParametersPresetsList)
@@ -71,7 +75,7 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
                         PresetEditor = Editor.CreateEditor(Presets, typeof(AvatarParametersPresetsRuntimeEditor)) as AvatarParametersPresetsRuntimeEditor;
                     }
                     EditorGUI.BeginDisabledGroup(true);
-                    EditorGUILayout.ObjectField(presets, typeof(AvatarParametersPresets), true);
+                    EditorGUILayout.ObjectField(presets, typeof(AvatarParametersSaverPlayModePersist.StoreDataGroupAsset), true);
                     EditorGUI.EndDisabledGroup();
                     EditorGUILayout.EndHorizontal();
                 }

@@ -25,10 +25,6 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
             }
             serializedObject.Update();
             EditorGUILayout.PropertyField(AvatarParametersSaverPresetGroup);
-            if (serializedObject.hasModifiedProperties)
-            {
-                AvatarParametersSaverPlayModePersist.Store((AvatarParametersPresets)target);
-            }
             serializedObject.ApplyModifiedProperties();
         }
     }
