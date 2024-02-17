@@ -22,6 +22,8 @@ Play時の現在のパラメーターをParameter Driverとして保存出来る
 
 ## 更新履歴
 
+- 3.0.0-beta.3
+  - Play中に正しく動作しなかった問題を修正
 - 3.0.0-beta.2
   - IEditorOnly
 - 3.0.0-beta.1
