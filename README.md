@@ -12,13 +12,17 @@ Play時の現在のパラメーターをParameter Driverとして保存出来る
 
 ## 使い方
 
-1. 「Tools」→「Avatar Parameters Saver」をクリックし、ツールを立ち上げます。
+0. シーンのAv3Emulatorを有効化します。(メニューの「Tools」→「Avavars 3.0 Emulator」→「Enable」)
 
-2. アバターを選択し、アバター以下の制御したいパラメーターを選択します。
+1. アバターのオブジェクトを右クリックし、「Modular Avatar」→「AvatarParametersPresets」からプリセットオブジェクトを作ります。
 
-3. 「保存」ボタンを押して保存場所を選択すれば、Modular AvatarのPrefabが出来上がります。
+2. 「Tools」→「Avatar Parameters Saver」をクリックしてツールを立ち上げ、シーンを再生します。
 
-4. Prefabをアバターの中（直下でなくても良い）に置けば、Modular Avatarによってメニューが統合されます。
+3. アバターを選択し、アバター以下の制御したいパラメーターを選択します。
+
+4. パラメーターをツール上で編集し、再生を抜けるとプリセットオブジェクトに設定が保持されています。
+
+5. シーンを再び再生したり、アバターをアップーロードする時にModular Avatarによってメニューが統合されます。
 
 ## 更新履歴
 
