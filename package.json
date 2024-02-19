@@ -1,6 +1,6 @@
 {
   "name": "net.narazaka.vrchat.avatar-parameters-saver",
-  "version": "3.0.0-beta.3",
+  "version": "3.0.0-beta.4",
   "displayName": "Avatar Parameters Saver",
   "description": "Save AV3Emu runtime Avatar Parameters to Parameter Driver",
   "author": {
