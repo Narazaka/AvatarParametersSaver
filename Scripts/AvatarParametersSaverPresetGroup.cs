@@ -12,6 +12,7 @@ namespace net.narazaka.vrchat.avatar_parameters_saver
         public bool networkSynced;
         public List<AvatarParametersSaverPreset> presets = new List<AvatarParametersSaverPreset>();
         public int IndexOffset;
+        public bool installParent = true;
 
         public int GetPresetParameterValue(int index)
         {

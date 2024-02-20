@@ -14,6 +14,7 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
         SerializedProperty NetworkSynced;
         SerializedProperty Presets;
         SerializedProperty IndexOffset;
+        SerializedProperty InstallParent;
         ReorderableList PresetsList;
         bool ShowAdvanced;
         bool ShowCustomize;
@@ -36,6 +37,8 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
             UpdatePropertiesIfNeeded(property);
             position.yMin += EditorGUIUtility.standardVerticalSpacing;
             EditorGUI.PropertyField(SingleLineRect(position), Icon);
+            position.yMin += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
+            EditorGUI.PropertyField(SingleLineRect(position), InstallParent, new GUIContent("親メニューを作る"));
             position.yMin += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
             ShowAdvanced = EditorGUI.Foldout(SingleLineRect(position), ShowAdvanced, new GUIContent("Advanced"));
             position.yMin += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
@@ -126,7 +129,7 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
         public float GetBasePropertyHeight(SerializedProperty property, GUIContent label = null)
         {
             UpdatePropertiesIfNeeded(property);
-            var lines = ShowAdvanced ? 9 : 2;
+            var lines = ShowAdvanced ? 10 : 3;
             return EditorGUIUtility.singleLineHeight * lines + EditorGUIUtility.standardVerticalSpacing * (lines + 2) + PresetsList.GetHeight();
         }
 
@@ -193,6 +196,7 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
             NetworkSynced = Current.FindPropertyRelative(nameof(AvatarParametersSaverPresetGroup.networkSynced));
             Presets = Current.FindPropertyRelative(nameof(AvatarParametersSaverPresetGroup.presets));
             IndexOffset = Current.FindPropertyRelative(nameof(AvatarParametersSaverPresetGroup.IndexOffset));
+            InstallParent = Current.FindPropertyRelative(nameof(AvatarParametersSaverPresetGroup.installParent));
             PresetsList = new ReorderableList(Current.serializedObject, Presets);
             PresetsList.drawHeaderCallback = rect => EditorGUI.LabelField(rect, "Presets");
             PresetsList.drawElementCallback = (rect, index, isActive, isFocused) =>

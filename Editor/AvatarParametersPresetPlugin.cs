@@ -38,14 +38,6 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
 
         void StoreAssets(AvatarParametersSaverPresetGroup presets, GameObject go, string parameterName, AnimatorController animator)
         {
-            var parentMenu = go.GetOrAddComponent<ModularAvatarMenuItem>();
-            parentMenu.Control = new VRCExpressionsMenu.Control
-            {
-                name = go.name,
-                type = VRCExpressionsMenu.Control.ControlType.SubMenu,
-                icon = presets.icon,
-            };
-            parentMenu.MenuSource = SubmenuSource.Children;
             var mergeAnimator = go.GetOrAddComponent<ModularAvatarMergeAnimator>();
             mergeAnimator.animator = animator;
             mergeAnimator.matchAvatarWriteDefaults = true;
@@ -99,9 +91,24 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
             {
                 Object.DestroyImmediate(redirect);
             }
-            if (redirectCount == presets.presets.Count)
+            else if (redirectCount == presets.presets.Count)
             {
-                Object.DestroyImmediate(parentMenu);
+                return;
+            }
+            if (presets.installParent)
+            {
+                var parentMenu = go.GetOrAddComponent<ModularAvatarMenuItem>();
+                parentMenu.Control = new VRCExpressionsMenu.Control
+                {
+                    name = go.name,
+                    type = VRCExpressionsMenu.Control.ControlType.SubMenu,
+                    icon = presets.icon,
+                };
+                parentMenu.MenuSource = SubmenuSource.Children;
+            }
+            else
+            {
+                go.GetOrAddComponent<ModularAvatarMenuGroup>();
             }
         }
 
