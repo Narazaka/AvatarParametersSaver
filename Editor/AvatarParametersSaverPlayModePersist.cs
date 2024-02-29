@@ -182,7 +182,7 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
             }
             else if (state == PlayModeStateChange.ExitingPlayMode)
             {
-                playData.DataToPersist();
+                playData?.DataToPersist();
             }
             else if (state == PlayModeStateChange.EnteredPlayMode)
             {
