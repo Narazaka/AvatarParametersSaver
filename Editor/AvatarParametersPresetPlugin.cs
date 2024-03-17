@@ -23,17 +23,12 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
             {
                 foreach (var presets in ctx.AvatarRootObject.GetComponentsInChildren<AvatarParametersPresets>())
                 {
-                    var parameterName = ParameterName(presets.AvatarParametersSaverPresetGroup, presets.gameObject);
+                    var parameterName = presets.ParameterName;
                     var animator = MakeAnimator(presets.AvatarParametersSaverPresetGroup, parameterName);
                     StoreAssets(presets.AvatarParametersSaverPresetGroup, presets.gameObject, parameterName, animator);
                     Object.DestroyImmediate(presets);
                 }
             });
-        }
-
-        string ParameterName(AvatarParametersSaverPresetGroup presets, GameObject go)
-        {
-            return string.IsNullOrEmpty(presets.parameterName) ? go.name : presets.parameterName;
         }
 
         void StoreAssets(AvatarParametersSaverPresetGroup presets, GameObject go, string parameterName, AnimatorController animator)
