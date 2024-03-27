@@ -26,7 +26,7 @@ Play時の現在のパラメーターをParameter Driverとして保存出来る
 
 ## 更新履歴
 
-- 3.2.0-rc.0
+- 3.2.0
   - NDMF 1.4.0 Parameter Provider 対応
 - 3.1.2
   - presetがシーン内に無い場合に再生終了時エラーが出る問題を修正
