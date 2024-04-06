@@ -26,6 +26,8 @@ Play時の現在のパラメーターをParameter Driverとして保存出来る
 
 ## 更新履歴
 
+- 3.2.1
+  - 依存関係の緩和
 - 3.2.0
   - NDMF 1.4.0 Parameter Provider 対応
 - 3.1.2
