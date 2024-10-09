@@ -8,13 +8,13 @@ namespace net.narazaka.vrchat.avatar_parameters_saver.editor
     public class AvatarParametersPresetsCreator
     {
 
-        [MenuItem("GameObject/ModularAvatar/AvatarParametersPresets", true)]
+        [MenuItem("GameObject/Modular Avatar/AvatarParametersPresets", true)]
         public static bool ValidateCreate()
         {
             return Selection.activeGameObject != null && Selection.activeGameObject.GetComponentInParent<VRCAvatarDescriptor>() != null;
         }
 
-        [MenuItem("GameObject/ModularAvatar/AvatarParametersPresets", false)]
+        [MenuItem("GameObject/Modular Avatar/AvatarParametersPresets", false)]
         public static void Create()
         {
             var obj = new GameObject("AvatarParametersPresets", typeof(ModularAvatarMenuInstaller), typeof(AvatarParametersPresets));
