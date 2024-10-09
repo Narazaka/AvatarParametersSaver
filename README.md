@@ -26,6 +26,8 @@ Play時の現在のパラメーターをParameter Driverとして保存出来る
 
 ## 更新履歴
 
+- 3.2.4
+  - 再パッケージ
 - 3.2.3
   - VPAI installerにMAリポジトリ追加
 - 3.2.2
